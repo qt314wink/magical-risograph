@@ -1,16 +1,1138 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Magical Risograph — Print Studio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MÄG-RISO // Immersive Print Sorcery & Physics Platform</title>
+  
+  <!-- CDNs: Tailwind CSS, GSAP, Matter.js, Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Fonts for Modern Magazine Aesthetic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Cinzel', 'serif'],
+            sans: ['Space Grotesk', 'sans-serif'],
+            syne: ['Syne', 'sans-serif'],
+          },
+          colors: {
+            riso: {
+              paper: '#F4F1EA',
+              pink: '#FF4B5C',
+              teal: '#00D2D3',
+              yellow: '#FECA57',
+              carbon: '#1A1A1A',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Global Riso Paper & Grain Texture Overlay */
+    body {
+      background-color: #F4F1EA;
+      overflow-x: hidden;
+      color: #1A1A1A;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Fine Micro-Grain Overlay */
+    .grain-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.14;
+      pointer-events: none;
+      z-index: 9999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F4F1EA;
+      border-left: 2px solid #1A1A1A;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #FF4B5C;
+      border: 2px solid #1A1A1A;
+    }
+
+    /* Overprint Translucent Color Layering (Multiply) */
+    .overprint-multiply {
+      mix-blend-mode: multiply;
+    }
+
+    /* Logo Layers styling */
+    .logo-pink {
+      color: #FF4B5C;
+      transform: translate(-3px, -1px);
+    }
+    .logo-teal {
+      color: #00D2D3;
+      transform: translate(3px, 1px);
+    }
+
+    /* Chromatic Aberration Simulation class */
+    .chromatic-active {
+      text-shadow: 
+        var(--x-shift, 4px) var(--y-shift, 2px) 0px #FF4B5C,
+        calc(var(--x-shift, 4px) * -1) calc(var(--y-shift, 2px) * -1) 0px #00D2D3;
+    }
+
+    /* Custom Selection Color */
+    ::selection {
+      background: #FF4B5C;
+      color: #F4F1EA;
+    }
+  </style>
+</head>
+<body class="relative min-h-screen">
+
+  <!-- Grain Overlay -->
+  <div class="grain-overlay"></div>
+
+  <!-- SVG Ink Bleed Filters Hidden definition -->
+  <svg class="absolute w-0 h-0 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="riso-ink-bleed" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.12" numOctaves="3" result="noise" />
+        <feDisplacementMap id="bleedMap" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- MAIN NAVIGATION HEADER -->
+  <header class="sticky top-0 z-[100] border-b-4 border-black bg-[#F4F1EA]/90 backdrop-blur-sm px-6 py-4 flex items-center justify-between">
+    <!-- Brand Logo [MÄG-RISO] -->
+    <div id="brand-logo" class="relative cursor-pointer select-none group h-10 w-44">
+      <div class="absolute inset-0 font-serif text-3xl font-black uppercase tracking-tight logo-pink overprint-multiply transition-transform duration-200 group-hover:translate-x-[-1px]">MÄG-RISO</div>
+      <div class="absolute inset-0 font-serif text-3xl font-black uppercase tracking-tight logo-teal overprint-multiply transition-transform duration-200 group-hover:translate-x-[1px]">MÄG-RISO</div>
+      <div class="absolute inset-0 font-serif text-3xl font-black uppercase tracking-tight text-[#1A1A1A]">MÄG-RISO</div>
+    </div>
+
+    <!-- Live Component Status Bar -->
+    <div class="hidden md:flex items-center gap-6 font-mono text-xs uppercase">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+        <span>Press-Rig: ACTIVE (60fps)</span>
+      </div>
+      <div class="flex items-center gap-2 border-l-2 border-black pl-6">
+        <i data-lucide="music" class="w-4 h-4 text-riso-pink"></i>
+        <span>PRO-AUDIO: SYNTHESIS ON</span>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Links -->
+    <nav class="flex items-center gap-4">
+      <a href="#desk-section" class="font-mono text-xs uppercase font-bold tracking-wider border-2 border-black px-3 py-1.5 hover:bg-riso-teal transition-colors">[ desk ]</a>
+      <a href="#lab-section" class="font-mono text-xs uppercase font-bold tracking-wider border-2 border-black px-3 py-1.5 hover:bg-riso-yellow transition-colors">[ ink-lab ]</a>
+      <a href="#grid-section" class="font-mono text-xs uppercase font-bold tracking-wider border-2 border-black px-3 py-1.5 hover:bg-riso-pink hover:text-white transition-colors">[ archive ]</a>
+    </nav>
+  </header>
+
+  <!-- HERO SECTION: THE MESSY DESK CANVAS (Matter.js Environment) -->
+  <section id="desk-section" class="relative w-full border-b-4 border-black py-4">
+    <div class="px-6 flex flex-col md:flex-row items-start justify-between gap-4 mb-2">
+      <div>
+        <!-- BleedTextPro interactive header -->
+        <h1 id="hero-bleed-text" class="text-4xl md:text-7xl font-syne font-extrabold uppercase tracking-tighter cursor-default leading-none">
+          PRINT SORCERY
+        </h1>
+        <p class="font-mono text-xs mt-2 text-riso-carbon/70">
+          [💡 GRAB, FLING, AND CRUMPLE PORTFOLIO MODULES BELOW. MOUSE SPEED GENERATES AUDIBLE FRICTION.]
+        </p>
+      </div>
+      <!-- Spatial Registration Mark Indicator -->
+      <div class="flex items-center gap-3 bg-riso-yellow/30 border-2 border-dashed border-black p-3 rounded">
+        <svg class="w-8 h-8 text-riso-pink animate-spin" style="animation-duration: 8s;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 2v20M2 12h20" />
+        </svg>
+        <div class="font-mono text-[10px] leading-tight">
+          <strong>REGISTRATION MARK [PR-02]</strong><br/>
+          GRAVITY DYNAMICS STABLE
+        </div>
+      </div>
+    </div>
+
+    <!-- Matter.js Interactive Workspace -->
+    <div id="physics-container" class="relative w-full h-[650px] bg-[#F4F1EA] border-t-4 border-black overflow-hidden" style="background-image: radial-gradient(#cac6b9 1.5px, transparent 1.5px); background-size: 32px 32px;">
+      
+      <!-- Invisible WebGL Halftone Sandbox Canvas layered behind physics cards -->
+      <canvas id="halftone-renderer" class="absolute inset-0 w-full h-full opacity-60 pointer-events-none"></canvas>
+
+      <!-- Drag-and-Drop HTML Elements mapped to Matter.js bodies -->
+      <div id="physics-scene" class="absolute inset-0 pointer-events-none z-10">
+
+        <!-- Physical Card 1: Artist Spotlight -->
+        <div class="physics-card pointer-events-auto absolute left-24 top-16 w-80 bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-grab active:cursor-grabbing select-none" data-weight="cardboard">
+          <div class="flex items-center justify-between border-b-2 border-black pb-2 mb-4">
+            <span class="font-mono text-[10px] uppercase bg-riso-pink text-white px-2 py-0.5">[ Spotlight ]</span>
+            <span class="font-mono text-[10px] text-riso-carbon/50">#ART-09</span>
+          </div>
+          <div class="w-full h-32 bg-riso-teal/20 border-2 border-black mb-4 overflow-hidden relative flex items-center justify-center">
+            <!-- Simulated Halftone Image inside Card -->
+            <div class="absolute inset-0 bg-[radial-gradient(#00d2d3_3px,transparent_3px)] bg-[size:10px_10px] opacity-70"></div>
+            <span class="relative font-serif text-3xl font-black text-riso-pink mix-blend-multiply">YUKI K.</span>
+          </div>
+          <h3 class="font-syne font-bold text-xl leading-tight text-riso-carbon mb-2">GENERATIVE ANALOG</h3>
+          <p class="font-sans text-xs text-riso-carbon/80 leading-relaxed">
+            Exploring the dynamic tension between screen matrices and physical ink roller misregistrations.
+          </p>
+          <div class="mt-4 flex justify-between items-center">
+            <button onclick="openZine('yuki')" class="font-mono text-[11px] uppercase underline decoration-riso-pink font-bold hover:text-riso-pink cursor-pointer">[ UNCONSTRAIN ZINE ]</button>
+            <i data-lucide="sparkles" class="w-4 h-4 text-riso-yellow fill-riso-yellow"></i>
+          </div>
+        </div>
+
+        <!-- Physical Card 2: Recent Works Reel -->
+        <div class="physics-card pointer-events-auto absolute left-[450px] top-28 w-72 bg-riso-yellow border-4 border-black p-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-grab active:cursor-grabbing select-none" data-weight="paper-light">
+          <div class="flex items-center gap-2 mb-3">
+            <i data-lucide="layers" class="w-4 h-4 text-black"></i>
+            <span class="font-mono text-[10px] uppercase font-bold">REEL SYSTEM [MP-02]</span>
+          </div>
+          <h4 class="font-serif text-2xl font-black leading-none uppercase mb-2">HYPER-STENCIL</h4>
+          <p class="font-sans text-xs text-black/85 leading-tight mb-4">
+            A dynamic portfolio layout mimicking physical continuous screen press setups.
+          </p>
+          <button onclick="openZine('stencil')" class="w-full py-2 bg-riso-carbon text-white font-mono text-[11px] uppercase hover:bg-riso-pink transition-colors">[ inspect sheet ]</button>
+        </div>
+
+        <!-- Physical Card 3: Interactive X-Ray Lens Info -->
+        <div class="physics-card pointer-events-auto absolute left-96 top-[380px] w-64 bg-riso-teal text-white border-4 border-black p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-grab active:cursor-grabbing select-none" data-weight="sticker">
+          <span class="font-mono text-[9px] uppercase border border-white px-2 py-0.5 inline-block mb-3">[ GL-04 INSTRUMENT ]</span>
+          <h4 class="font-syne font-extrabold text-lg leading-tight mb-2">X-RAY INSPECTOR</h4>
+          <p class="font-sans text-xs text-white/90 leading-snug">
+            Drag this over the static editorial canvas below to scan concealed blueprint layout matrix files.
+          </p>
+        </div>
+
+        <!-- Sticky Note / Sticker 4 -->
+        <div class="physics-card pointer-events-auto absolute left-[850px] top-12 w-44 bg-riso-pink text-white border-4 border-black p-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-grab active:cursor-grabbing select-none" data-weight="sticker">
+          <div class="text-right font-mono text-[9px]">52.22 // PM</div>
+          <div class="text-center font-serif text-4xl font-black my-2">100%</div>
+          <p class="font-mono text-[9px] text-center leading-none">FLUO PINK INK LOADED</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE SECTION 2: THE INK LAB SHADER SANDBOX -->
+  <section id="lab-section" class="w-full border-b-4 border-black bg-white grid grid-cols-1 lg:grid-cols-12">
+    <!-- Visual Lab Canvas Display Area -->
+    <div class="lg:col-span-7 border-b-4 lg:border-b-0 lg:border-r-4 border-black p-8 flex flex-col justify-between bg-riso-paper/50 relative overflow-hidden">
+      <div class="absolute inset-0 bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] bg-[size:24px_24px] opacity-10"></div>
+      
+      <div>
+        <span class="font-mono text-xs uppercase bg-riso-carbon text-white px-3 py-1">[ LAB WORKSPACE - SI-01 ]</span>
+        <h2 class="font-serif text-5xl font-black uppercase text-riso-carbon mt-4 tracking-tight leading-none">THE SHADER MATRIX</h2>
+      </div>
+
+      <!-- Real-time WebGL Simulation Window -->
+      <div class="my-8 relative w-full h-[320px] bg-riso-paper border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <!-- Live simulated Riso print preview -->
+        <div id="shader-sandbox-preview" class="absolute inset-0 flex items-center justify-center transition-all duration-300">
+          <div id="halftone-pattern-overlay" class="absolute inset-0 bg-[radial-gradient(#ff4b5c_var(--pt-size,8px),transparent_var(--pt-size,8px))] bg-[size:var(--pt-freq,20px)_var(--pt-freq,20px)] overprint-multiply transition-all duration-75"></div>
+          <div id="halftone-pattern-offset" class="absolute inset-0 bg-[radial-gradient(#00d2d3_var(--pt-size,8px),transparent_var(--pt-size,8px))] bg-[size:var(--pt-freq,20px)_var(--pt-freq,20px)] overprint-multiply opacity-80 translate-x-[var(--pt-off-x,4px)] translate-y-[var(--pt-off-y,2px)] transition-all duration-75"></div>
+          
+          <!-- Inner Editorial Specimen Frame -->
+          <div class="relative z-10 text-center select-none p-6 bg-riso-paper/90 border-2 border-black max-w-sm">
+            <span class="font-mono text-xs text-riso-pink font-bold uppercase block mb-1">// SPECIES MATRIX //</span>
+            <h3 class="font-serif text-4xl font-extrabold uppercase text-riso-carbon leading-none mb-3">MÄG-RISO SYSTEM</h3>
+            <p class="font-sans text-xs text-riso-carbon/80">Adjust sliders on the panel to distort the canvas real-time parameters directly.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="font-mono text-[11px] text-riso-carbon/70 flex justify-between">
+        <span>GPU CLOCK SPEEDS: 2.8ms / FRAME</span>
+        <span>RENDER ENGINE: VANILLA HTML CANVAS 2D SHADER MODEL</span>
+      </div>
+    </div>
+
+    <!-- Sliders and Adjustment Panel -->
+    <div class="lg:col-span-5 p-8 flex flex-col justify-between bg-[#F4F1EA]">
+      <div>
+        <h3 class="font-syne font-bold text-2xl uppercase border-b-2 border-black pb-2 mb-6 text-riso-carbon">CONTROL PANEL</h3>
+        
+        <!-- Controls Stack -->
+        <div class="space-y-6">
+          <!-- Slider 1: Halftone Dot Size -->
+          <div>
+            <div class="flex justify-between font-mono text-xs mb-2">
+              <span class="font-bold">HALFTONE LINE DENSITY</span>
+              <span id="val-dot-size" class="text-riso-pink font-bold">8px</span>
+            </div>
+            <input type="range" id="slider-dot-size" min="2" max="22" value="8" step="1" class="w-full accent-riso-pink cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+
+          <!-- Slider 2: Screen Pitch (Frequency) -->
+          <div>
+            <div class="flex justify-between font-mono text-xs mb-2">
+              <span class="font-bold">SCREEN GRID FREQUENCY</span>
+              <span id="val-grid-freq" class="text-riso-teal font-bold">20px</span>
+            </div>
+            <input type="range" id="slider-grid-freq" min="10" max="45" value="20" step="1" class="w-full accent-riso-teal cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+
+          <!-- Slider 3: Misregistration Offset -->
+          <div>
+            <div class="flex justify-between font-mono text-xs mb-2">
+              <span class="font-bold">MISREGISTRATION DRUM OFFSET</span>
+              <span id="val-offset" class="text-riso-pink font-bold">4px</span>
+            </div>
+            <input type="range" id="slider-offset" min="0" max="25" value="4" step="1" class="w-full accent-riso-pink cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+
+          <!-- Color Channel Swaps -->
+          <div>
+            <span class="block font-mono text-xs font-bold mb-3">SELECT INK ROLLER PAIR</span>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="changeInks('#FF4B5C', '#00D2D3')" class="font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-pink hover:text-white transition-colors uppercase font-bold text-center">Pink / Teal</button>
+              <button onclick="changeInks('#FF4B5C', '#FECA57')" class="font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-pink hover:text-white transition-colors uppercase font-bold text-center">Pink / Yellow</button>
+              <button onclick="changeInks('#00D2D3', '#FECA57')" class="font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-teal hover:text-white transition-colors uppercase font-bold text-center">Teal / Yellow</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 border-t-2 border-black pt-6">
+        <p class="font-mono text-[11px] text-riso-carbon/80 leading-snug">
+          Adjusting these parameters forces immediate hardware-accelerated recalculations of spatial layout vector coordinates, demonstrating modern creative browser execution capabilities.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE SECTION 3: EDITORIAL SPATIAL ARCHIVE WITH X-RAY INSPECTOR -->
+  <section id="grid-section" class="relative w-full border-b-4 border-black py-16 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <span class="font-mono text-xs uppercase text-riso-pink font-bold tracking-widest block mb-2">[ ARCHITECTURAL GHOST LAYER ]</span>
+          <h2 class="font-serif text-5xl md:text-6xl font-black uppercase tracking-tight text-riso-carbon">THE EDITORIAL CANVAS</h2>
+        </div>
+        <div class="max-w-sm">
+          <p class="font-sans text-xs text-riso-carbon/70 leading-relaxed">
+            Hover over and drag your mouse across the dark canvas below. A high-contrast circular lens mask filters and exposes hidden engineering blueprints concealed inside the layout.
+          </p>
+        </div>
+      </div>
+
+      <!-- X-RAY LENS CONTAINER -->
+      <div id="xray-container" class="relative w-full h-[450px] bg-riso-carbon border-4 border-black overflow-hidden cursor-crosshair select-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+        
+        <!-- LAYER 01: The Standard Beautiful Presentation Layer -->
+        <div class="absolute inset-0 p-8 md:p-12 flex flex-col justify-between bg-riso-paper transition-all duration-300">
+          <div class="flex justify-between items-start">
+            <h3 class="font-serif text-3xl font-black text-riso-carbon uppercase">STUDIO CASE_094</h3>
+            <span class="font-mono text-xs border-2 border-black px-3 py-1 bg-riso-yellow">[ STANDARD VIEW ]</span>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 my-4">
+            <div>
+              <h4 class="font-mono text-xs font-bold text-riso-pink uppercase mb-2">// 01 / STENCIL DESIGN</h4>
+              <p class="text-xs text-riso-carbon/85 leading-relaxed">Creating clean layout hierarchies utilizing brutalist margins and strict mechanical grid alignments.</p>
+            </div>
+            <div>
+              <h4 class="font-mono text-xs font-bold text-riso-teal uppercase mb-2">// 02 / COLOR OVERPRINT</h4>
+              <p class="text-xs text-riso-carbon/85 leading-relaxed">Translucent inks blending organically. Double-channel processing reveals vibrant, unpredictable spot color highlights.</p>
+            </div>
+            <div>
+              <h4 class="font-mono text-xs font-bold text-riso-carbon uppercase mb-2">// 03 / MECHANICAL RUN</h4>
+              <p class="text-xs text-riso-carbon/85 leading-relaxed">Continuous production. Matter.js calculations dynamic alignment parameters for responsive layout grids.</p>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center border-t-2 border-black pt-4">
+            <span class="font-mono text-xs">[ PRESS SYSTEM v1.5 ]</span>
+            <span class="font-mono text-xs">HOVER & SWIPE OVER CONTAINER TO REVEAL ALCHEMIC FORMULAS</span>
+          </div>
+        </div>
+
+        <!-- LAYER 02: The Invisible Alchemic Ghost Layer (Exposed strictly inside dynamic clip path mask) -->
+        <div id="xray-ghost-layer" class="absolute inset-0 p-8 md:p-12 flex flex-col justify-between bg-riso-pink text-white pointer-events-none select-none" style="clip-path: circle(0px at 0px 0px); -webkit-clip-path: circle(0px at 0px 0px);">
+          <div class="flex justify-between items-start">
+            <h3 class="font-serif text-3xl font-black text-riso-yellow uppercase italic tracking-tight">ALCHEMIC PRINT MANIFESTO</h3>
+            <span class="font-mono text-xs border-2 border-white px-3 py-1 bg-riso-carbon text-white">// GHOST SECRETS EXPOSED //</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 my-4">
+            <div class="border-2 border-white border-dashed p-4 bg-black/20">
+              <span class="font-mono text-xs text-riso-yellow font-bold block mb-1">INCANTATION 1.01</span>
+              <p class="font-mono text-[11px] leading-tight text-white/95">vec2 distortedUv = vUv + (noise.rg - 0.5) * 0.007 * (1.0 + uVelocity * 0.1);</p>
+            </div>
+            <div class="border-2 border-white border-dashed p-4 bg-black/20">
+              <span class="font-mono text-xs text-riso-yellow font-bold block mb-1">DAMPING FORMULA</span>
+              <p class="font-mono text-[11px] leading-tight text-white/95">velocity.current = gsap.utils.interpolate(velocity.current, instantVelocity, 0.12);</p>
+            </div>
+            <div class="border-2 border-white border-dashed p-4 bg-black/20">
+              <span class="font-mono text-xs text-riso-yellow font-bold block mb-1">PRESS REGISTRATION</span>
+              <p class="font-mono text-[11px] leading-tight text-white/95">frictionAir: 0.05, restitution: 0.4, density: 0.005</p>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center border-t-2 border-white pt-4 font-mono text-xs text-riso-yellow">
+            <span>[ SYSTEM DECRYPTION ACTIVE ]</span>
+            <span>SHADERS RENDERING DIRECTLY TO GPU PIPELINE</span>
+          </div>
+        </div>
+
+        <!-- Floating dashed lens cue -->
+        <div id="xray-lens-cue" class="absolute w-[180px] h-[180px] border-4 border-dashed border-riso-yellow rounded-full pointer-events-none transform -translate-x-1/2 -translate-y-1/2 z-50 mix-blend-difference hidden"></div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWS FEED & COLLABORATION FOOTER CONTACT FORM -->
+  <section class="w-full bg-riso-carbon text-[#F4F1EA] py-16 px-6 border-t-4 border-black relative">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+      
+      <!-- News Feed / Information Column -->
+      <div class="lg:col-span-6 flex flex-col justify-between">
+        <div>
+          <span class="font-mono text-xs text-riso-yellow font-bold tracking-widest block mb-2">[ CONSTANT PRESS REGISTER ]</span>
+          <h2 class="font-serif text-5xl font-black uppercase leading-none tracking-tight mb-8">THE WEEKLY RUN</h2>
+          
+          <!-- Feed items -->
+          <div class="space-y-6">
+            <div class="border-l-4 border-riso-pink pl-4 py-1">
+              <span class="font-mono text-[10px] text-[#F4F1EA]/60">[ MAY 2026 // EDITION 48 ]</span>
+              <h4 class="font-syne font-bold text-lg text-riso-yellow leading-tight mt-1">THE tactile Web renaissance</h4>
+              <p class="text-xs text-[#F4F1EA]/80 mt-1">Why modern consumers are demanding physical, highly interactive visual friction over streamlined, empty corporate structures.</p>
+            </div>
+            <div class="border-l-4 border-riso-teal pl-4 py-1">
+              <span class="font-mono text-[10px] text-[#F4F1EA]/60">[ APRIL 2026 // EDITION 47 ]</span>
+              <h4 class="font-syne font-bold text-lg text-riso-teal leading-tight mt-1">variable typography ink-bleeds</h4>
+              <p class="text-xs text-[#F4F1EA]/80 mt-1">Deep dive into setting CSS variables inside GSAP tick loops for organic vector distortion mechanics.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-12 border-t border-white/20 pt-6">
+          <p class="font-mono text-xs text-[#F4F1EA]/50 leading-relaxed">
+            MÄG-RISO is a proprietary visual architecture conceptualized and engineered to showcase absolute state-of-the-art interactive front-end mastery.
+          </p>
+        </div>
+      </div>
+
+      <!-- CRUMPLE AND TOSS FORM LAYER -->
+      <div class="lg:col-span-6 bg-[#F4F1EA] text-riso-carbon border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(255,75,92,1)] relative overflow-hidden flex flex-col justify-between">
+        
+        <!-- Animated success page elements -->
+        <div id="form-success-overlay" class="absolute inset-0 bg-riso-yellow z-40 p-8 flex flex-col justify-between pointer-events-none opacity-0 transition-opacity duration-300">
+          <div>
+            <div class="w-12 h-12 rounded-full border-4 border-black flex items-center justify-center mb-6">
+              <i data-lucide="check" class="w-6 h-6 text-black stroke-[3]"></i>
+            </div>
+            <h3 class="font-serif text-4xl font-black uppercase leading-none mb-4">INCANTATION SUCCESSFUL</h3>
+            <p class="font-sans text-sm text-black/85">Your details have been successfully processed, stamped, and printed. The canvas sheet has been crumpled and fired into the gravity engine below.</p>
+          </div>
+          <button onclick="resetContactForm()" class="w-full py-3 bg-riso-carbon text-white font-mono text-xs uppercase tracking-widest border-2 border-black hover:bg-riso-pink transition-colors cursor-pointer">[ PRINT NEW STENCIL ]</button>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between border-b-2 border-black pb-3 mb-6">
+            <h3 class="font-serif text-2xl font-black uppercase">// COLLABORATION INTAKE //</h3>
+            <i data-lucide="file-text" class="w-5 h-5 text-riso-pink"></i>
+          </div>
+
+          <!-- The Input Form -->
+          <form id="contact-form" onsubmit="handleCrumpleSubmit(event)" class="space-y-4">
+            <div>
+              <label class="block font-mono text-[10px] uppercase font-bold text-riso-carbon/70 mb-1">[ 01 / SIGN MASTER MASTERSTENCIL ]</label>
+              <input required type="text" id="form-name" placeholder="YOUR NAME OR STUDIO TITLE" class="w-full bg-white border-2 border-black px-3 py-2 text-xs font-mono placeholder:text-riso-carbon/40 focus:bg-riso-yellow/10 focus:outline-none">
+            </div>
+            <div>
+              <label class="block font-mono text-[10px] uppercase font-bold text-riso-carbon/70 mb-1">[ 02 / COMMUNICATOR EMAIL ]</label>
+              <input required type="email" id="form-email" placeholder="EMAIL@DOMAIN.COM" class="w-full bg-white border-2 border-black px-3 py-2 text-xs font-mono placeholder:text-riso-carbon/40 focus:bg-riso-yellow/10 focus:outline-none">
+            </div>
+            <div>
+              <label class="block font-mono text-[10px] uppercase font-bold text-riso-carbon/70 mb-1">[ 03 / THE INTENT STATEMENT ]</label>
+              <textarea required id="form-message" rows="3" placeholder="OUTLINE YOUR IMMERSIVE SYSTEM REQUIREMENTS..." class="w-full bg-white border-2 border-black px-3 py-2 text-xs font-mono placeholder:text-riso-carbon/40 focus:bg-riso-yellow/10 focus:outline-none resize-none"></textarea>
+            </div>
+
+            <!-- Dynamic SVG Ink-Burst Tooltip trigger button -->
+            <div class="pt-2">
+              <button type="submit" class="w-full py-3 bg-riso-teal text-white font-mono text-xs uppercase font-bold tracking-widest border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer">
+                [ SUBMIT & CRUMPLE STENCIL ]
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <p class="font-mono text-[10px] text-riso-carbon/50 mt-6 leading-none text-center">
+          * SUBMISSION TRIGGERS PHYSICAL MATTER.JS CRUMPLE DYNAMICS
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- IMMERSIVE COMPONENT: ZINE MODAL UNFOLD (MP-01 3D Concertina Fold Modal) -->
+  <div id="zine-modal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+    <!-- 3D Transform Viewport -->
+    <div class="relative flex w-[98%] max-w-[1020px] h-[550px]" style="perspective: 2000px;">
+      
+      <!-- Close Trigger Button -->
+      <button onclick="closeZine()" class="absolute -top-12 right-0 font-mono text-xs uppercase tracking-widest text-[#F4F1EA] bg-riso-pink border-2 border-black px-4 py-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer z-[1000]">
+        [ CRUMPLE SHEET & EXPELL ]
+      </button>
+
+      <!-- PANEL 1: Left Page Cover -->
+      <div id="panel-1" class="relative w-1/3 h-full bg-[#F4F1EA] border-4 border-black p-6 flex flex-col justify-between select-none">
+        <div>
+          <span id="zine-category" class="font-mono text-[10px] uppercase tracking-wider text-riso-pink font-bold block mb-1">⚡ SPOTLIGHT // PROJECT</span>
+          <h2 id="zine-title" class="font-serif text-3xl font-black uppercase text-riso-carbon leading-none mb-4">SYSTEMS MASTER</h2>
+          <div class="w-12 h-1 bg-riso-teal mb-6"></div>
+        </div>
+        <p id="zine-description" class="font-mono text-xs text-riso-carbon/80 leading-relaxed">
+          Default case study presentation layout showcasing tactile paper physics.
+        </p>
+        <div class="font-mono text-[10px] text-riso-carbon/50">MÄG-RISO ARCHIVE SERIES</div>
+
+        <!-- PANEL 2: Middle Page Content (HTML Nested for 3D Concertina Fold Mechanics) -->
+        <div id="panel-2" class="absolute top-[-4px] left-[98.8%] w-full h-full bg-[#F4F1EA] border-4 border-black p-6 flex flex-col justify-between overflow-y-auto select-none" style="transform-origin: right center;">
+          
+          <!-- Hinge Overlay Ambient Crease Shadow -->
+          <div id="crease-shadow-1" class="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-black/25 to-transparent pointer-events-none z-10"></div>
+
+          <div>
+            <h3 class="font-syne font-bold text-lg text-riso-teal mb-3 uppercase">// EXECUTION RUN //</h3>
+            <p id="zine-body" class="font-sans text-xs text-riso-carbon leading-relaxed mb-4">
+              Detailed technical blueprint metrics indicating responsive physical calculations and color separation metrics.
+            </p>
+          </div>
+
+          <!-- PANEL 3: Right Page (HTML Nested Inside Panel 2) -->
+          <div id="panel-3" class="absolute top-[-4px] left-[98.8%] w-full h-full bg-[#F4F1EA] border-4 border-black p-6 flex flex-col justify-between select-none" style="transform-origin: left center;">
+            
+            <!-- Hinge Overlay Ambient Crease Shadow 2 -->
+            <div id="crease-shadow-2" class="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-black/25 to-transparent pointer-events-none z-10"></div>
+
+            <div>
+              <h3 class="font-syne font-bold text-lg text-riso-yellow mb-3 uppercase">// TECHNICAL BLUEPRINTS //</h3>
+              <div class="border-2 border-dashed border-riso-carbon/30 p-3 bg-riso-pink/10 font-mono text-[10px] space-y-1">
+                <div><strong>STENCIL DRUM:</strong> DUAL MATRIX</div>
+                <div><strong>EMISSION GAIN:</strong> +12.4db</div>
+                <div><strong>RESTORATION:</strong> LERP MATH</div>
+                <div><strong>STOCK PROFILE:</strong> RAW COTTON</div>
+              </div>
+            </div>
+
+            <button onclick="closeZine()" class="w-full py-2.5 bg-riso-carbon text-white font-mono text-xs uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-riso-pink transition-colors cursor-pointer">
+              [ RETURN TO DESK ]
+            </button>
+          </div> <!-- End Panel 3 -->
+
+        </div> <!-- End Panel 2 -->
+
+      </div> <!-- End Panel 1 -->
+
+    </div>
+  </div>
+
+  <!-- APPLICATION ARCHITECTURE & CODE (Matter.js + GSAP + Audio + Interactive logic) -->
+  <script>
+    // System Metadata
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'mag-riso-system';
+
+    // -------------------------------------------------------------
+    // PROCEDURAL AUDIO SYNTHESIS SYSTEM (Paper friction sound mapping)
+    // -------------------------------------------------------------
+    let audioCtx = null;
+    let whiteNoiseSource = null;
+    let bandpassFilter = null;
+    let audioGain = null;
+
+    function initAudioEngine() {
+      if (audioCtx) return;
+
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass();
+
+      // Generate 2 seconds of pure organic white noise
+      const bufferSize = 2 * audioCtx.sampleRate;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const outputChannel = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        outputChannel[i] = Math.random() * 2 - 1;
+      }
+
+      whiteNoiseSource = audioCtx.createBufferSource();
+      whiteNoiseSource.buffer = noiseBuffer;
+      whiteNoiseSource.loop = true;
+
+      // Bandpass Filter shapes noise to resemble physical paper rubbing
+      bandpassFilter = audioCtx.createBiquadFilter();
+      bandpassFilter.type = 'bandpass';
+      bandpassFilter.frequency.value = 500;
+      bandpassFilter.Q.value = 1.8;
+
+      // Master gain node
+      audioGain = audioCtx.createGain();
+      audioGain.gain.setValueAtTime(0, audioCtx.currentTime);
+
+      // Connect nodes
+      whiteNoiseSource.connect(bandpassFilter);
+      bandpassFilter.connect(audioGain);
+      audioGain.connect(audioCtx.destination);
+
+      whiteNoiseSource.start();
+    }
+
+    function modulateFrictionSound(speed) {
+      if (!audioCtx || !audioGain || !bandpassFilter) return;
+
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      // Map velocity vector magnitude safely to sound amplitude and filter sweep
+      const targetVolume = Math.min(speed * 0.04, 0.22);
+      const targetFreq = 300 + (speed * 45);
+
+      audioGain.gain.setTargetAtTime(targetVolume, audioCtx.currentTime, 0.05);
+      bandpassFilter.frequency.setTargetAtTime(targetFreq, audioCtx.currentTime, 0.05);
+    }
+
+    // -------------------------------------------------------------
+    // HERO VARIABLE TYPOGRAPHY & DISPLACEMENT SYSTEM (<BleedTextPro>)
+    // -------------------------------------------------------------
+    const heroHeader = document.getElementById('hero-bleed-text');
+    const bleedMap = document.getElementById('bleedMap');
+    let pointerPos = { x: 0, y: 0 };
+    let lastPointerPos = { x: 0, y: 0 };
+    let elementVelocity = 0;
+
+    if (heroHeader && bleedMap) {
+      const handleMove = (e) => {
+        const rect = heroHeader.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        pointerPos = {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      };
+
+      const handleEnter = () => {
+        initAudioEngine();
+        gsap.ticker.add(updateBleedLoop);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove);
+      };
+
+      const handleLeave = () => {
+        gsap.ticker.remove(updateBleedLoop);
+        window.removeEventListener('mousemove', handleMove);
+        window.removeEventListener('touchmove', handleMove);
+
+        // Quiet the synthesizer
+        if (audioGain) {
+          audioGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+        }
+
+        // Return element smoothly to pristine layout defaults
+        gsap.to(bleedMap, { attr: { scale: 0 }, duration: 0.6, ease: 'power3.out' });
+        heroHeader.style.setProperty('--x-shift', '0px');
+        heroHeader.style.setProperty('--y-shift', '0px');
+        heroHeader.classList.remove('chromatic-active');
+      };
+
+      const updateBleedLoop = () => {
+        const dx = pointerPos.x - lastPointerPos.x;
+        const dy = pointerPos.y - lastPointerPos.y;
+        const instantSpeed = Math.sqrt(dx*dx + dy*dy);
+
+        // Interpolate velocity dampening values
+        elementVelocity = gsap.utils.interpolate(elementVelocity, instantSpeed, 0.12);
+        const cappedVal = Math.min(elementVelocity, 20);
+
+        // 1. Physically warp the vector outline via SVG displacement
+        bleedMap.setAttribute('scale', (cappedVal * 2.5).toString());
+
+        // 2. Separate color channels based on directional displacement
+        heroHeader.style.setProperty('--x-shift', `${cappedVal * 0.9}px`);
+        heroHeader.style.setProperty('--y-shift', `${cappedVal * 0.4}px`);
+        heroHeader.classList.add('chromatic-active');
+
+        // 3. Command real-time audio modulator values
+        modulateFrictionSound(cappedVal);
+
+        // 4. Spawn high-speed liquid ink dripping anomalies
+        if (instantSpeed > 32 && Math.random() > 0.85) {
+          spawnDripAnomalies(pointerPos.x, pointerPos.y);
+        }
+
+        lastPointerPos = { ...pointerPos };
+      };
+
+      const spawnDripAnomalies = (x, y) => {
+        const drip = document.createElement('div');
+        drip.className = 'absolute bg-riso-pink rounded-full pointer-events-none overprint-multiply z-10';
+        const size = gsap.utils.random(4, 12);
+        drip.style.width = `${size}px`;
+        drip.style.height = `${size}px`;
+        drip.style.left = `${x}px`;
+        drip.style.top = `${y}px`;
+
+        heroHeader.appendChild(drip);
+
+        gsap.to(drip, {
+          y: `+=${gsap.utils.random(50, 150)}`,
+          scaleX: 0.5,
+          scaleY: 1.8,
+          opacity: 0,
+          duration: gsap.utils.random(1.0, 1.8),
+          ease: 'power1.in',
+          onComplete: () => drip.remove()
+        });
+      };
+
+      heroHeader.addEventListener('mouseenter', handleEnter);
+      heroHeader.addEventListener('mouseleave', handleLeave);
+      heroHeader.addEventListener('touchstart', handleEnter);
+      heroHeader.addEventListener('touchend', handleLeave);
+    }
+
+    // -------------------------------------------------------------
+    // MATTER.JS DESK PHYSICS CORE ENGINE (PR-01/PR-02)
+    // -------------------------------------------------------------
+    let engine, world, runner;
+    const cardsMapping = [];
+
+    function initPhysicsDesk() {
+      const container = document.getElementById('physics-container');
+      const scene = document.getElementById('physics-scene');
+      if (!container || !scene) return;
+
+      const { Engine, World, Bodies, Mouse, MouseConstraint, Events, Body } = Matter;
+
+      // 1. Create Engine
+      engine = Engine.create();
+      engine.gravity.y = 0.35; // Light downward tilt
+
+      // 2. Boundaries setup (so zine sheets do not tumble out of window view)
+      // Safely default to 800x650 if element dimensions are evaluated as 0 (e.g., hidden in offscreen containers initially)
+      const width = container.clientWidth || 800;
+      const height = container.clientHeight || 650;
+      const boundaryOptions = { isStatic: true, render: { visible: false } };
+
+      const ground = Bodies.rectangle(width / 2, height + 30, Math.max(width, 2000), 60, boundaryOptions);
+      const leftWall = Bodies.rectangle(-30, height / 2, 60, Math.max(height, 2000), boundaryOptions);
+      const rightWall = Bodies.rectangle(width + 30, height / 2, 60, Math.max(height, 2000), boundaryOptions);
+      const ceiling = Bodies.rectangle(width / 2, -30, Math.max(width, 2000), 60, boundaryOptions);
+
+      World.add(engine.world, [ground, leftWall, rightWall, ceiling]);
+
+      // 3. Map DOM Cards dynamically to Rigid Physics Boxes
+      const htmlCards = Array.from(scene.querySelectorAll('.physics-card'));
+      htmlCards.forEach((el, index) => {
+        const rect = el.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // Enforce strong positive dimensions so Matter.js does not get degenerate (0-width/0-height) coordinate vertices
+        const elWidth = Math.max(rect.width, 40) || el.offsetWidth || 250;
+        const elHeight = Math.max(rect.height, 40) || el.offsetHeight || 150;
+
+        const x = (rect.left - containerRect.left + elWidth / 2) || (width / 2);
+        const y = (rect.top - containerRect.top + elHeight / 2) || (height / 2);
+
+        const weight = el.getAttribute('data-weight') || 'cardboard';
+        let density = 0.005;
+        let frictionAir = 0.05;
+        let restitution = 0.3;
+
+        if (weight === 'paper-light') {
+          density = 0.001;
+          frictionAir = 0.08;
+          restitution = 0.1;
+        } else if (weight === 'sticker') {
+          density = 0.002;
+          frictionAir = 0.12;
+          restitution = 0.05;
+        }
+
+        const body = Bodies.rectangle(x, y, elWidth, elHeight, {
+          restitution: restitution,
+          frictionAir: frictionAir,
+          density: density,
+          friction: 0.15
+        });
+
+        // Hook DOM pointer ref
+        body.domElement = el;
+
+        // Apply a random initial skew rotation
+        Body.setAngle(body, (Math.random() - 0.5) * 0.25);
+
+        World.add(engine.world, body);
+        cardsMapping.push(body);
+      });
+
+      // 4. Mouse constraint mapping for direct web dragging mechanics
+      const mouse = Mouse.create(container);
+      const mouseConstraint = MouseConstraint.create(engine, {
+        mouse: mouse,
+        constraint: {
+          stiffness: 0.1,
+          render: { visible: false }
+        }
+      });
+
+      World.add(engine.world, mouseConstraint);
+
+      // Prevent window scroll locking when dragging inside physics bounds on mobile
+      mouseConstraint.mouse.element.removeEventListener("mousewheel", mouseConstraint.mouse.mousewheel);
+      mouseConstraint.mouse.element.removeEventListener("DOMMouseScroll", mouseConstraint.mouse.mousewheel);
+
+      // Track click vs drag logic securely so zines can still be unconstrained
+      let dragStartPos = { x: 0, y: 0 };
+      Events.on(mouseConstraint, 'mousedown', (event) => {
+        dragStartPos = { ...event.mouse.position };
+        initAudioEngine();
+      });
+
+      Events.on(mouseConstraint, 'dragend', (event) => {
+        const endPos = event.mouse.position;
+        const distance = Math.sqrt(Math.pow(endPos.x - dragStartPos.x, 2) + Math.pow(endPos.y - dragStartPos.y, 2));
+        
+        // If click was steady (less than 5px of movement), evaluate click action on the card
+        if (distance < 5 && event.source.body) {
+          const dom = event.source.body.domElement;
+          if (dom) {
+            // Check if there are unconstrain buttons inside
+            const trigger = dom.querySelector('button');
+            if (trigger) trigger.click();
+          }
+        }
+      });
+
+      // 5. High-Frequency Real-Time Sync Loop
+      Events.on(engine, 'afterUpdate', () => {
+        cardsMapping.forEach((body) => {
+          const el = body.domElement;
+          if (!el) return;
+
+          const { x, y } = body.position;
+          const angle = body.angle;
+
+          // Align center coordinates offset securely
+          const halfWidth = el.offsetWidth / 2;
+          const halfHeight = el.offsetHeight / 2;
+
+          el.style.transform = `translate3d(${x - halfWidth}px, ${y - halfHeight}px, 0px) rotate(${angle}rad)`;
+
+          // Play real-time drag sounds on high physical velocity events
+          if (body.speed > 1.2) {
+            modulateFrictionSound(body.speed * 2.5);
+            
+            // Apply directional chromatic separation variables inside card styling
+            const colorSeparation = Math.min(body.speed * 1.5, 12);
+            el.style.setProperty('--x-shift', `${colorSeparation}px`);
+            el.style.setProperty('--y-shift', `${colorSeparation * 0.5}px`);
+            el.classList.add('chromatic-active');
+          } else {
+            el.classList.remove('chromatic-active');
+          }
+        });
+      });
+
+      // 6. Launch Matter runner pipeline
+      runner = Matter.Runner.create();
+      Matter.Runner.run(runner, engine);
+    }
+
+    // -------------------------------------------------------------
+    // THE CRUMPLE-AND-TOSS INTERACTION ENGINE (FORM SUBMIT)
+    // -------------------------------------------------------------
+    function handleCrumpleSubmit(e) {
+      e.preventDefault();
+      initAudioEngine();
+
+      const container = document.getElementById('physics-container');
+      const successOverlay = document.getElementById('form-success-overlay');
+      const form = document.getElementById('contact-form');
+      if (!container || !successOverlay || !form) return;
+
+      // Unfold success screen
+      successOverlay.classList.remove('pointer-events-none');
+      gsap.to(successOverlay, { opacity: 1, duration: 0.3 });
+
+      // Generate a brand new paper crumple physics body inside Matter.js
+      const { Bodies, World, Body } = Matter;
+      const width = container.clientWidth;
+      
+      const newBall = document.createElement('div');
+      newBall.className = 'physics-card pointer-events-auto absolute w-16 h-16 bg-riso-yellow border-4 border-black rounded-full flex items-center justify-center font-mono text-[9px] text-center select-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]';
+      newBall.innerHTML = '✉️<br/>FORM';
+      
+      document.getElementById('physics-scene').appendChild(newBall);
+
+      // Drop Crumpled Ball from top center
+      const ballBody = Bodies.circle(width / 2, 50, 32, {
+        restitution: 0.6,
+        frictionAir: 0.05,
+        density: 0.01
+      });
+
+      ballBody.domElement = newBall;
+      World.add(engine.world, ballBody);
+      cardsMapping.push(ballBody);
+
+      // Launch and throw it!
+      Body.setVelocity(ballBody, { x: gsap.utils.random(-8, 8), y: 3 });
+
+      // Play impact sound cue via Synth sweep
+      setTimeout(() => {
+        if (audioCtx) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.3);
+          
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+          
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.3);
+        }
+      }, 150);
+    }
+
+    function resetContactForm() {
+      const successOverlay = document.getElementById('form-success-overlay');
+      const form = document.getElementById('contact-form');
+      if (successOverlay && form) {
+        gsap.to(successOverlay, {
+          opacity: 0,
+          duration: 0.3,
+          onComplete: () => {
+            successOverlay.classList.add('pointer-events-none');
+            form.reset();
+          }
+        });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // SHADER SANDBOX PARAMETERS INK CONTROL PANEL
+    // -------------------------------------------------------------
+    const sliderDotSize = document.getElementById('slider-dot-size');
+    const sliderGridFreq = document.getElementById('slider-grid-freq');
+    const sliderOffset = document.getElementById('slider-offset');
+
+    const valDotSize = document.getElementById('val-dot-size');
+    const valGridFreq = document.getElementById('val-grid-freq');
+    const valOffset = document.getElementById('val-offset');
+
+    const patternOverlay = document.getElementById('halftone-pattern-overlay');
+    const patternOffset = document.getElementById('halftone-pattern-offset');
+
+    function updateSandbox() {
+      if (!sliderDotSize || !sliderGridFreq || !sliderOffset) return;
+
+      const size = sliderDotSize.value;
+      const freq = sliderGridFreq.value;
+      const offset = sliderOffset.value;
+
+      // Update text values
+      valDotSize.innerText = `${size}px`;
+      valGridFreq.innerText = `${freq}px`;
+      valOffset.innerText = `${offset}px`;
+
+      // Recalculate CSS visual patterns
+      document.getElementById('shader-sandbox-preview').style.setProperty('--pt-size', `${size / 2}px`);
+      document.getElementById('shader-sandbox-preview').style.setProperty('--pt-freq', `${freq}px`);
+      document.getElementById('shader-sandbox-preview').style.setProperty('--pt-off-x', `${offset}px`);
+      document.getElementById('shader-sandbox-preview').style.setProperty('--pt-off-y', `${offset * 0.5}px`);
+    }
+
+    if (sliderDotSize) {
+      sliderDotSize.addEventListener('input', updateSandbox);
+      sliderGridFreq.addEventListener('input', updateSandbox);
+      sliderOffset.addEventListener('input', updateSandbox);
+      updateSandbox(); // Initial run
+    }
+
+    function changeInks(color1, color2) {
+      if (!patternOverlay || !patternOffset) return;
+      
+      // Dynamic shift of inline gradient patterns colors
+      patternOverlay.style.backgroundImage = `radial-gradient(${color1} var(--pt-size,8px),transparent var(--pt-size,8px))`;
+      patternOffset.style.backgroundImage = `radial-gradient(${color2} var(--pt-size,8px),transparent var(--pt-size,8px))`;
+      
+      // Flash the background of the target matrix block to indicate swap
+      const spec = document.querySelector('#shader-sandbox-preview div.relative');
+      if (spec) {
+        gsap.fromTo(spec, { backgroundColor: '#FECA57' }, { backgroundColor: '#F4F1EA', duration: 0.5 });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // THE EDITORIAL CANVAS X-RAY INSPECT FILTER SYSTEM (GL-04)
+    // -------------------------------------------------------------
+    const xrayContainer = document.getElementById('xray-container');
+    const xrayGhostLayer = document.getElementById('xray-ghost-layer');
+    const xrayLensCue = document.getElementById('xray-lens-cue');
+
+    if (xrayContainer && xrayGhostLayer && xrayLensCue) {
+      const handleLensMove = (e) => {
+        const rect = xrayContainer.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        // Clip circular path coordinates inside real-time GPU engine
+        xrayGhostLayer.style.clipPath = `circle(90px at ${x}px ${y}px)`;
+        xrayGhostLayer.style.webkitClipPath = `circle(90px at ${x}px ${y}px)`;
+
+        // Adjust floating lens target visual aid coordinates
+        xrayLensCue.style.left = `${x}px`;
+        xrayLensCue.style.top = `${y}px`;
+      };
+
+      xrayContainer.addEventListener('mouseenter', () => {
+        xrayLensCue.classList.remove('hidden');
+      });
+
+      xrayContainer.addEventListener('mouseleave', () => {
+        xrayLensCue.classList.add('hidden');
+        xrayGhostLayer.style.clipPath = 'circle(0px at 0px 0px)';
+        xrayGhostLayer.style.webkitClipPath = 'circle(0px at 0px 0px)';
+      });
+
+      xrayContainer.addEventListener('mousemove', handleLensMove);
+      xrayContainer.addEventListener('touchmove', handleLensMove);
+    }
+
+    // -------------------------------------------------------------
+    // REUSABLE 3D CONCERTINA ZINE MODAL SYSTEM (MP-01)
+    // -------------------------------------------------------------
+    const zineModal = document.getElementById('zine-modal');
+    const panel1 = document.getElementById('panel-1');
+    const panel2 = document.getElementById('panel-2');
+    const panel3 = document.getElementById('panel-3');
+    const shadow1 = document.getElementById('crease-shadow-1');
+    const shadow2 = document.getElementById('crease-shadow-2');
+
+    const projectData = {
+      yuki: {
+        title: "YUKI K. SHOWCASE",
+        category: "⚡ ARTIST SPOTLIGHT // INC-09",
+        description: "A continuous production-grade showcase mapping the intersection of organic print misalignment and physical web structures.",
+        body: "Using custom web solutions, Yuki forces structural layout modules to slide and overprint dynamically based on hardware-accelerated scroll positions. By stacking multiple color layers, they establish unmatched visual depth in typical consumer browsers."
+      },
+      stencil: {
+        title: "HYPER-STENCIL REEL",
+        category: "⚡ RECENT PRODUCTION WORKS",
+        description: "A digital translation of mechanical spot stencil drums. Designed to handle infinite imagery feeds with zero latency layout lag.",
+        body: "Our custom WebGL pipeline processes any incoming high-res brand artwork directly within the GPU. The image layers instantly separate, overlay, and compress into pure translucent dots, eliminating standard processing overhead."
+      }
+    };
+
+    function openZine(projectKey) {
+      const data = projectData[projectKey];
+      if (!data || !zineModal) return;
+
+      // Swap inner content
+      document.getElementById('zine-title').innerText = data.title;
+      document.getElementById('zine-category').innerText = data.category;
+      document.getElementById('zine-description').innerText = data.description;
+      document.getElementById('zine-body').innerText = data.body;
+
+      // Pause the physics desk rendering runner to maximize UI performance
+      if (engine) engine.timing.timeScale = 0;
+
+      // Setup clean base 3D transform orientations before trigger
+      gsap.set([panel1, panel2, panel3], { transformStyle: 'preserve-3d', backfaceVisibility: 'hidden' });
+      gsap.set(panel1, { transformOrigin: 'left center' });
+      gsap.set(panel2, { transformOrigin: 'right center' });
+      gsap.set(panel3, { transformOrigin: 'left center' });
+
+      zineModal.classList.remove('pointer-events-none');
+      
+      const tl = gsap.timeline({ defaults: { ease: 'power4.inOut', duration: 1.1 } });
+
+      tl.to(zineModal, { opacity: 1, duration: 0.3 })
+        .fromTo(panel1, { rotateY: -90, x: -100 }, { rotateY: 0, x: 0 }, '-=0.1')
+        .fromTo(panel2, { rotateY: 175 }, { rotateY: 0 }, '-=0.8')
+        .fromTo(shadow1, { opacity: 0.75 }, { opacity: 0 }, '-=1.1')
+        .fromTo(panel3, { rotateY: -175 }, { rotateY: 0 }, '-=0.9')
+        .fromTo(shadow2, { opacity: 0.75 }, { opacity: 0 }, '-=0.9');
+    }
+
+    function closeZine() {
+      if (!zineModal) return;
+
+      const tl = gsap.timeline({
+        defaults: { ease: 'power3.inOut', duration: 0.8 },
+        onComplete: () => {
+          zineModal.classList.add('pointer-events-none');
+          // Resume active physics rendering calculations
+          if (engine) engine.timing.timeScale = 1;
+        }
+      });
+
+      tl.to(panel3, { rotateY: -175 })
+        .to(shadow2, { opacity: 0.75 }, 0)
+        .to(panel2, { rotateY: 175 }, '-=0.6')
+        .to(shadow1, { opacity: 0.75 }, '-=0.6')
+        .to(panel1, { rotateY: -90, x: -100 }, '-=0.5')
+        .to(zineModal, { opacity: 0, duration: 0.3 }, '-=0.2');
+    }
+
+    // Escape Key Modal Safeguard
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeZine();
+    });
+
+    // -------------------------------------------------------------
+    // SYSTEM INITIALIZATION CALLS
+    // -------------------------------------------------------------
+    window.onload = () => {
+      lucide.createIcons();
+      initPhysicsDesk();
+    };
+
+    // Recalculate Boundaries on window resize events
+    window.addEventListener('resize', () => {
+      if (engine) {
+        // Clear old boundaries, re-map safely or reload scene
+        const container = document.getElementById('physics-container');
+        if (container) {
+          const width = container.clientWidth;
+          const height = container.clientHeight;
+          // Easy reload for clean layout boundaries setup
+          location.reload();
+        }
+      }
+    });
+  </script>
+</body>
 </html>
