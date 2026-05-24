@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#FF4B5C">
+  <link rel="manifest" href="/manifest.json">
   <title>MÄG-RISO // Immersive Print Sorcery & Physics Platform</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -109,6 +111,14 @@
       height: 8px;
       border: 2px solid black;
     }
+    html.dark-mode {
+      filter: invert(1);
+    }
+    html.dark-mode .grain-overlay,
+    html.dark-mode canvas,
+    html.dark-mode img {
+      filter: invert(1);
+    }
     .toast {
       font-family: 'Space Grotesk', sans-serif;
       pointer-events: auto;
@@ -198,6 +208,7 @@
     </div>
 
     <nav class="flex items-center gap-2 flex-wrap justify-end">
+      <button onclick="toggleDarkMode()" id="dark-mode-btn" class="font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" title="Toggle Night Shift">[☾]</button>
       <button onclick="switchScreen('desk')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-riso-teal px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="desk">[desk]</button>
       <button onclick="switchScreen('lab')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="lab">[lab]</button>
       <button onclick="switchScreen('archive')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="archive">[archive]</button>
@@ -329,6 +340,15 @@
                 <button onclick="changeInksLab('#FF4B5C','#FECA57','Pink / Yellow')" class="lab-ink-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-pink hover:text-white transition-colors uppercase font-bold text-center">Pink / Yellow</button>
                 <button onclick="changeInksLab('#00D2D3','#FECA57','Teal / Yellow')" class="lab-ink-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-teal hover:text-white transition-colors uppercase font-bold text-center">Teal / Yellow</button>
               </div>
+            </div>
+            <div class="pt-4 border-t border-black/10">
+              <span class="block font-mono text-xs font-bold mb-3 uppercase tracking-wider">[Image Source]</span>
+              <div class="flex items-center gap-2">
+                <button onclick="document.getElementById('lab-image-input').click()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-white px-3 py-2 hover:bg-riso-pink hover:text-white transition-colors">[UPLOAD IMAGE]</button>
+                <button onclick="clearLabImage()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-white px-3 py-2 hover:bg-riso-carbon hover:text-white transition-colors">[CLEAR]</button>
+              </div>
+              <input type="file" id="lab-image-input" accept="image/*" class="hidden" onchange="handleLabImageUpload(this)">
+              <span id="lab-image-name" class="font-mono text-[9px] text-riso-carbon/50 mt-1 block">PROCEDURAL MODE ACTIVE</span>
             </div>
           </div>
         </div>
@@ -513,6 +533,9 @@
           <option value="date-asc">OLDEST FIRST</option>
           <option value="layers-desc">MOST LAYERS</option>
         </select>
+      </div>
+      <div class="flex justify-end mb-4">
+        <button onclick="generateRandomProject()" class="font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-riso-yellow px-3 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-riso-pink hover:text-white transition-colors active:translate-y-0.5">[GENERATE RANDOM PROJECT]</button>
       </div>
       <div class="space-y-6" id="queue-feed">
         <!-- Queue items injected by JS -->
@@ -884,35 +907,90 @@
     const labCanvas = document.getElementById('lab-processor-canvas');
     const labCtx = labCanvas?.getContext('2d');
     let labConfig = { dotSize: 6, frequency: 16, offset: 6, inkColor1: '#FF4B5C', inkColor2: '#00D2D3' };
+    let labImageData = null, labImagePixels = null;
     function renderLabHalftone() {
       if (!labCanvas || !labCtx || currentActiveScreen !== 'lab') return;
       const w = labCanvas.width, h = labCanvas.height;
       labCtx.clearRect(0, 0, w, h);
       labCtx.fillStyle = '#F4F1EA'; labCtx.fillRect(0, 0, w, h);
       const density = labConfig.frequency, radiusMax = labConfig.dotSize, misalignment = labConfig.offset;
-      labCtx.save(); labCtx.fillStyle = labConfig.inkColor2; labCtx.globalCompositeOperation = 'multiply';
-      for (let x = 0; x < w; x += density) {
-        for (let y = 0; y < h; y += density) {
-          const distToCenter = Math.sqrt(Math.pow(x - w / 2, 2) + Math.pow(y - h / 2, 2));
-          const luminance = (Math.sin(distToCenter * 0.015 - (Date.now() * 0.002)) + 1.0) / 2.0;
-          const radius = Math.max(0.2, luminance * radiusMax);
-          labCtx.beginPath(); labCtx.arc(x - misalignment, y - misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
+      if (labImagePixels) {
+        const imgW = labImagePixels.width, imgH = labImagePixels.height;
+        labCtx.save(); labCtx.fillStyle = labConfig.inkColor2; labCtx.globalCompositeOperation = 'multiply';
+        for (let x = 0; x < w; x += density) {
+          for (let y = 0; y < h; y += density) {
+            const sx = Math.floor((x / w) * imgW);
+            const sy = Math.floor((y / h) * imgH);
+            const idx = (sy * imgW + sx) * 4;
+            const brightness = (labImagePixels.data[idx] + labImagePixels.data[idx+1] + labImagePixels.data[idx+2]) / 765;
+            const radius = Math.max(0.2, (1 - brightness) * radiusMax);
+            labCtx.beginPath(); labCtx.arc(x - misalignment, y - misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
+          }
         }
-      }
-      labCtx.restore();
-      labCtx.save(); labCtx.fillStyle = labConfig.inkColor1; labCtx.globalCompositeOperation = 'multiply';
-      for (let x = 0; x < w; x += density) {
-        for (let y = 0; y < h; y += density) {
-          const distToCenter = Math.sqrt(Math.pow(x - w / 2, 2) + Math.pow(y - h / 2, 2));
-          const luminance = (Math.sin(distToCenter * 0.015 - (Date.now() * 0.002) + Math.PI) + 1.0) / 2.0;
-          const radius = Math.max(0.2, luminance * radiusMax);
-          labCtx.beginPath(); labCtx.arc(x + misalignment, y + misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
+        labCtx.restore();
+        labCtx.save(); labCtx.fillStyle = labConfig.inkColor1; labCtx.globalCompositeOperation = 'multiply';
+        for (let x = 0; x < w; x += density) {
+          for (let y = 0; y < h; y += density) {
+            const sx = Math.floor((x / w) * imgW);
+            const sy = Math.floor((y / h) * imgH);
+            const idx = (sy * imgW + sx) * 4;
+            const brightness = (labImagePixels.data[idx] + labImagePixels.data[idx+1] + labImagePixels.data[idx+2]) / 765;
+            const radius = Math.max(0.2, (1 - brightness) * radiusMax);
+            labCtx.beginPath(); labCtx.arc(x + misalignment, y + misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
+          }
         }
+        labCtx.restore();
+      } else {
+        labCtx.save(); labCtx.fillStyle = labConfig.inkColor2; labCtx.globalCompositeOperation = 'multiply';
+        for (let x = 0; x < w; x += density) {
+          for (let y = 0; y < h; y += density) {
+            const distToCenter = Math.sqrt(Math.pow(x - w / 2, 2) + Math.pow(y - h / 2, 2));
+            const luminance = (Math.sin(distToCenter * 0.015 - (Date.now() * 0.002)) + 1.0) / 2.0;
+            const radius = Math.max(0.2, luminance * radiusMax);
+            labCtx.beginPath(); labCtx.arc(x - misalignment, y - misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
+          }
+        }
+        labCtx.restore();
+        labCtx.save(); labCtx.fillStyle = labConfig.inkColor1; labCtx.globalCompositeOperation = 'multiply';
+        for (let x = 0; x < w; x += density) {
+          for (let y = 0; y < h; y += density) {
+            const distToCenter = Math.sqrt(Math.pow(x - w / 2, 2) + Math.pow(y - h / 2, 2));
+            const luminance = (Math.sin(distToCenter * 0.015 - (Date.now() * 0.002) + Math.PI) + 1.0) / 2.0;
+            const radius = Math.max(0.2, luminance * radiusMax);
+            labCtx.beginPath(); labCtx.arc(x + misalignment, y + misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
+          }
+        }
+        labCtx.restore();
       }
-      labCtx.restore();
       labCtx.save(); labCtx.globalAlpha = 0.05; labCtx.fillStyle = '#1A1A1A';
       for (let i = 0; i < 3000; i++) labCtx.fillRect(Math.random() * w, Math.random() * h, 1, 1);
       labCtx.restore();
+    }
+    function handleLabImageUpload(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const off = document.createElement('canvas');
+          off.width = 120; off.height = 120;
+          const offCtx = off.getContext('2d');
+          offCtx.drawImage(img, 0, 0, 120, 120);
+          labImagePixels = offCtx.getImageData(0, 0, 120, 120);
+          document.getElementById('lab-image-name').innerText = file.name.toUpperCase();
+          showToast('IMAGE LOADED INTO STENCIL', 'success');
+          renderLabHalftone();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    function clearLabImage() {
+      labImagePixels = null;
+      document.getElementById('lab-image-name').innerText = 'PROCEDURAL MODE ACTIVE';
+      showToast('CLEARED IMAGE', 'info');
+      renderLabHalftone();
     }
     const sliderLabDot = document.getElementById('slider-lab-dot');
     const sliderLabFreq = document.getElementById('slider-lab-freq');
@@ -1662,6 +1740,54 @@
     }
     globalCanvasLoop();
 
+    // RANDOM PROJECT GENERATOR
+    function generateRandomProject() {
+      const titles = ['NEON GHOST', 'ACID RAIN', 'PAPER CUT', 'INK WELL', 'HALFTONE HORIZON', 'STENCIL DREAM', 'RISO RITUAL', 'DRUM BEAT', 'OVERPRINT ORACLE', 'FLUORESCENT MEMORY'];
+      const colors = [['#FF4B5C', '#00D2D3'], ['#FECA57', '#1A1A1A'], ['#9B59B6', '#F4F1EA'], ['#FF4B5C', '#FECA57'], ['#00D2D3', '#FECA57'], ['#FF4B5C', '#9B59B6']];
+      const title = titles[Math.floor(Math.random() * titles.length)];
+      const colorSet = colors[Math.floor(Math.random() * colors.length)];
+      const layers = 2 + Math.floor(Math.random() * 5);
+      const nextIdNum = 93 + queueItems.length;
+      queueItems.unshift({
+        id: 'QP-' + String(nextIdNum).padStart(3, '0'),
+        title: title,
+        colors: colorSet,
+        layers: layers,
+        status: 'QUEUED',
+        date: new Date().toISOString().slice(0, 10)
+      });
+      renderQueue();
+      showToast('GENERATED: ' + title, 'success');
+      playStampChime();
+    }
+
+    // KONAMI CODE
+    let konamiSequence = [];
+    const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    window.addEventListener('keydown', (e) => {
+      konamiSequence.push(e.key);
+      konamiSequence = konamiSequence.slice(-10);
+      if (konamiSequence.join(',') === konamiCode.join(',')) {
+        showToast('SECRET CODE ACTIVATED', 'success');
+        invertGravity();
+        scatterDesk();
+        playStampChime();
+      }
+    });
+
+    // DARK MODE
+    let darkModeEnabled = false;
+    function toggleDarkMode() {
+      darkModeEnabled = !darkModeEnabled;
+      document.documentElement.classList.toggle('dark-mode', darkModeEnabled);
+      const btn = document.getElementById('dark-mode-btn');
+      if (btn) btn.innerText = darkModeEnabled ? '[☼]' : '[☾]';
+      showToast(darkModeEnabled ? 'NIGHT SHIFT ACTIVE' : 'DAY MODE RESTORED', 'info');
+      localStorage.setItem('magRisoDark', darkModeEnabled ? '1' : '0');
+    }
+    const savedDark = localStorage.getItem('magRisoDark');
+    if (savedDark === '1') { darkModeEnabled = true; document.documentElement.classList.add('dark-mode'); }
+
     // TOAST SYSTEM
     function showToast(message, type = 'info') {
       const container = document.getElementById('toast-container');
@@ -1679,8 +1805,11 @@
 
     // INIT
     window.onload = () => {
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
       lucide.createIcons();
       loadState();
+      const darkBtn = document.getElementById('dark-mode-btn');
+      if (darkBtn && darkModeEnabled) darkBtn.innerText = '[☼]';
       const hash = window.location.hash.slice(1);
       if (hash && document.getElementById('screen-' + hash)) {
         document.getElementById('screen-desk')?.classList.add('hidden-screen');

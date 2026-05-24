@@ -1,0 +1,12 @@
+{
+  "name": "MÄG-RISO",
+  "short_name": "MÄG-RISO",
+  "description": "Immersive Print Sorcery & Physics Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4F1EA",
+  "theme_color": "#FF4B5C",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
