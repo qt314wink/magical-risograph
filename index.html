@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MÄG-RISO // Immersive Print Sorcery & Physics Platform</title>
   
-  <!-- CDNs: Tailwind CSS, GSAP, Matter.js, Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Google Fonts for Editorial Aesthetics -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@400;700&family=Syne:wght@700;800&family=Playfair+Display:ital,wght@1,600;1,800&display=swap" rel="stylesheet">
@@ -32,6 +30,8 @@
               pink: '#FF4B5C',
               teal: '#00D2D3',
               yellow: '#FECA57',
+              purple: '#9B59B6',
+              orange: '#E67E22',
               carbon: '#1A1A1A',
             }
           }
@@ -41,135 +41,95 @@
   </script>
 
   <style>
-    /* Absolute premium letterpress, overprint & texture styling */
     body {
       background-color: #F4F1EA;
       overflow-x: hidden;
       color: #1A1A1A;
       font-family: 'Space Grotesk', sans-serif;
-      /* Disable default cursor for dynamic ink trail mapping */
       cursor: none !important;
     }
+    button, a, input, textarea, select { cursor: none !important; }
 
-    button, a, input, textarea, select {
-      cursor: none !important;
-    }
-
-    /* Tactile Paper Micro-Grain Overlay */
     .grain-overlay {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0.16;
-      pointer-events: none;
-      z-index: 99999;
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      opacity: 0.16; pointer-events: none; z-index: 99999;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     }
-
-    /* Debossed Letterpress effect */
     .letterpress-debossed {
-      text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.2), 1px 1px 0px rgba(255, 255, 255, 0.8);
+      text-shadow: -1px -1px 0px rgba(0,0,0,0.2), 1px 1px 0px rgba(255,255,255,0.8);
     }
-
-    /* Custom Scrollbar styled as Riso Ink Strip */
-    ::-webkit-scrollbar {
-      width: 10px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #F4F1EA;
-      border-left: 3px solid #1A1A1A;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #FF4B5C;
-      border: 3px solid #1A1A1A;
-    }
-
-    /* Overprint multiply effect simulating wet translucent overlay inks */
-    .overprint-multiply {
-      mix-blend-mode: multiply;
-    }
-
-    /* Chromatic alignment split */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: #F4F1EA; border-left: 3px solid #1A1A1A; }
+    ::-webkit-scrollbar-thumb { background: #FF4B5C; border: 3px solid #1A1A1A; }
+    .overprint-multiply { mix-blend-mode: multiply; }
     .chromatic-active {
       text-shadow: 
-        var(--x-shift, 5px) var(--y-shift, 2px) 0px #FF4B5C,
-        calc(var(--x-shift, 5px) * -1) calc(var(--y-shift, 2px) * -1) 0px #00D2D3;
+        var(--x-shift,5px) var(--y-shift,2px) 0px #FF4B5C,
+        calc(var(--x-shift,5px)*-1) calc(var(--y-shift,2px)*-1) 0px #00D2D3;
     }
-
-    /* Hidden element helper */
-    .hidden-screen {
-      display: none !important;
-    }
-
-    /* Smooth page swipe transition blocks */
+    .hidden-screen { display: none !important; }
     #page-swipe-ink {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 9999;
-      background: #FF4B5C;
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 9999; background: #FF4B5C;
       clip-path: circle(0% at 50% 50%);
       -webkit-clip-path: circle(0% at 50% 50%);
     }
+    .plate-shadow { box-shadow: inset 4px 4px 0px rgba(0,0,0,0.15), 4px 4px 0px rgba(0,0,0,1); }
+    .logo-pink { color: #FF4B5C; transform: translate(-3px,-1px); }
+    .logo-teal { color: #00D2D3; transform: translate(3px,1px); }
 
-    /* Simulated letterpress plate container shadow */
-    .plate-shadow {
-      box-shadow: inset 4px 4px 0px rgba(0, 0, 0, 0.15), 4px 4px 0px rgba(0, 0, 0, 1);
+    /* Print Queue parallax cards */
+    .queue-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .queue-card:hover {
+      transform: translateY(-4px) rotate(-1deg);
+      box-shadow: 8px 8px 0px rgba(0,0,0,1);
+    }
+
+    /* Separation channel toggle animation */
+    .channel-strip {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .channel-strip.off {
+      opacity: 0.08;
+      filter: grayscale(1);
     }
   </style>
 </head>
 <body class="relative min-h-screen">
 
-  <!-- Micro-Grain physical paper texture -->
   <div class="grain-overlay"></div>
-
-  <!-- Dynamic Page Transition Swipe Overlay -->
   <div id="page-swipe-ink"></div>
-
-  <!-- Custom Real-Time Ink-Trail Canvas Layer -->
   <canvas id="cursor-trail-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-[99998]"></canvas>
 
-  <!-- SVG Liquid Ink Bleed Filter Matrix -->
   <svg class="absolute w-0 h-0 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="riso-ink-bleed" x="-20%" y="-20%" width="140%" height="140%">
         <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="3" result="noise" />
         <feDisplacementMap id="bleedMap" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" />
       </filter>
-      <!-- Deep Letterpress Stamp filter -->
-      <filter id="letterpress-stamp">
-        <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" result="noise"/>
-        <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -9" result="highContrast"/>
-        <feComposite operator="in" in="SourceGraphic" in2="highContrast"/>
-      </filter>
     </defs>
   </svg>
 
-  <!-- IMMERSIVE FLOATING ALCHEMIC CONTROL HUD (Fixed Side Anchor) -->
+  <!-- HUD -->
   <div class="fixed bottom-6 left-6 z-[1000] flex flex-col gap-2">
-    <!-- Sound Toggle -->
-    <button onclick="toggleGlobalAudio()" id="audio-hud-btn" class="plate-shadow bg-riso-yellow hover:bg-riso-pink text-riso-carbon border-3 border-black p-3 rounded-full transition-transform active:scale-95 select-none" title="Toggle Alchemic Synthesizer">
+    <button onclick="toggleGlobalAudio()" id="audio-hud-btn" class="plate-shadow bg-riso-yellow hover:bg-riso-pink text-riso-carbon border-3 border-black p-3 rounded-full transition-transform active:scale-95 select-none">
       <i data-lucide="music-4" class="w-5 h-5 stroke-[2.5]"></i>
     </button>
-    <!-- Reset Desk Gravity -->
-    <button onclick="shakeDesk()" class="plate-shadow bg-riso-teal hover:bg-riso-pink text-white border-3 border-black p-3 rounded-full transition-transform active:scale-95 select-none" title="Shake Physics Desk">
+    <button onclick="shakeDesk()" class="plate-shadow bg-riso-teal hover:bg-riso-pink text-white border-3 border-black p-3 rounded-full transition-transform active:scale-95 select-none">
       <i data-lucide="sparkles" class="w-5 h-5 stroke-[2.5]"></i>
     </button>
   </div>
 
-  <!-- HEADER NAVIGATION -->
+  <!-- HEADER -->
   <header class="sticky top-0 z-[100] border-b-4 border-black bg-[#F4F1EA]/90 backdrop-blur-sm px-6 py-4 flex items-center justify-between">
-    <!-- Logo Brand Matrix -->
     <div onclick="switchScreen('desk')" class="relative select-none group h-10 w-44">
       <div class="absolute inset-0 font-serif text-3xl font-black uppercase tracking-tight logo-pink overprint-multiply transition-transform duration-200 group-hover:translate-x-[-1.5px]">MÄG-RISO</div>
       <div class="absolute inset-0 font-serif text-3xl font-black uppercase tracking-tight logo-teal overprint-multiply transition-transform duration-200 group-hover:translate-x-[1.5px]">MÄG-RISO</div>
       <div class="absolute inset-0 font-serif text-3xl font-black uppercase tracking-tight text-[#1A1A1A]">MÄG-RISO</div>
     </div>
 
-    <!-- Live Engineering Telemetry Panel -->
     <div class="hidden lg:flex items-center gap-6 font-mono text-[10px] uppercase tracking-wider">
       <div class="flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-ping"></span>
@@ -181,54 +141,37 @@
       </div>
     </div>
 
-    <!-- Navigation Hub (Page Switches) -->
-    <nav class="flex items-center gap-3">
-      <button onclick="switchScreen('desk')" class="nav-tab-btn font-mono text-xs uppercase font-bold tracking-wider border-2 border-black bg-riso-teal px-3 py-1.5 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="desk">[ desk ]</button>
-      <button onclick="switchScreen('lab')" class="nav-tab-btn font-mono text-xs uppercase font-bold tracking-wider border-2 border-black bg-white px-3 py-1.5 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="lab">[ ink-lab ]</button>
-      <button onclick="switchScreen('archive')" class="nav-tab-btn font-mono text-xs uppercase font-bold tracking-wider border-2 border-black bg-white px-3 py-1.5 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="archive">[ exhibition ]</button>
+    <nav class="flex items-center gap-2 flex-wrap justify-end">
+      <button onclick="switchScreen('desk')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-riso-teal px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="desk">[desk]</button>
+      <button onclick="switchScreen('lab')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="lab">[lab]</button>
+      <button onclick="switchScreen('archive')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="archive">[archive]</button>
+      <button onclick="switchScreen('separation')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="separation">[channels]</button>
+      <button onclick="switchScreen('queue')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="queue">[queue]</button>
     </nav>
   </header>
 
-  <!-- SCREEN 1: THE MESSY DESK WORKSPACE (PHYSICS CANVAS) -->
+  <!-- SCREEN 1: DESK -->
   <main id="screen-desk" class="screen-wrapper w-full">
     <section class="relative w-full border-b-4 border-black py-6 px-6 bg-white">
       <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <!-- Animated variable typography header with hover bleed capabilities -->
-          <h1 id="hero-bleed-text" class="text-4xl md:text-8xl font-syne font-extrabold uppercase tracking-tighter leading-none select-none" style="filter: url(#riso-ink-bleed);">
-            PRINT SORCERY
-          </h1>
-          <p class="font-mono text-xs mt-3 text-riso-carbon/70 uppercase">
-            [⚡ SWIPE OR THROW THE FLOATING CASES. HIGH VELOCITIES MODULATE PRO-AUDIO PAPER FRICTION SHADERS.]
-          </p>
+          <h1 id="hero-bleed-text" class="text-4xl md:text-8xl font-syne font-extrabold uppercase tracking-tighter leading-none select-none" style="filter:url(#riso-ink-bleed);">PRINT SORCERY</h1>
+          <p class="font-mono text-xs mt-3 text-riso-carbon/70 uppercase">[⚡ SWIPE OR THROW THE FLOATING CASES. HIGH VELOCITIES MODULATE PRO-AUDIO PAPER FRICTION.]</p>
         </div>
         <div class="flex items-center gap-3 bg-riso-yellow/30 border-2 border-dashed border-black p-4 max-w-sm rounded">
-          <svg class="w-10 h-10 text-riso-pink animate-spin" style="animation-duration: 10s;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 2v20M2 12h20" />
-          </svg>
-          <div class="font-mono text-[10px] leading-tight">
-            <strong>GRAVITY ALIGNER [PR-02]</strong><br/>
-            ATTRACTOR CORES LOADED.<br/>
-            TAP TO FLING FREE.
-          </div>
+          <svg class="w-10 h-10 text-riso-pink animate-spin" style="animation-duration:10s;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+          <div class="font-mono text-[10px] leading-tight"><strong>GRAVITY ALIGNER [PR-02]</strong><br/>ATTRACTOR CORES ACTIVE.<br/>TAP TO FLING FREE.</div>
         </div>
       </div>
     </section>
 
-    <!-- Matter.js Interactive Workspace -->
-    <section id="physics-container" class="relative w-full h-[650px] bg-[#F4F1EA] border-b-4 border-black overflow-hidden" style="background-image: radial-gradient(#cac6b9 2px, transparent 2px); background-size: 32px 32px;">
-      
-      <!-- Canvas layered directly under html cards for reactive ink bursts -->
+    <section id="physics-container" class="relative w-full h-[650px] bg-[#F4F1EA] border-b-4 border-black overflow-hidden" style="background-image:radial-gradient(#cac6b9 2px,transparent 2px);background-size:32px 32px;">
       <canvas id="halftone-renderer" class="absolute inset-0 w-full h-full opacity-40 pointer-events-none"></canvas>
-
-      <!-- Absolute Layout container mapping physics boxes to HTML DOM -->
       <div id="physics-scene" class="absolute inset-0 pointer-events-none z-10">
 
-        <!-- Case Card 01: Spot Light Zine -->
-        <div class="physics-card pointer-events-auto absolute left-12 top-16 w-80 bg-white border-4 border-black p-6 shadow-[6px_6px_0px_rgba(0,0,0,1)] select-none cursor-grab active:cursor-grabbing" data-weight="cardboard">
+        <div id="card-yuki" class="physics-card pointer-events-auto absolute w-80 bg-white border-4 border-black p-6 shadow-[6px_6px_0px_rgba(0,0,0,1)] select-none cursor-grab active:cursor-grabbing" data-weight="cardboard">
           <div class="flex items-center justify-between border-b-2 border-black pb-2 mb-4">
-            <span class="font-mono text-[9px] uppercase bg-riso-pink text-white px-2 py-0.5 font-bold">[ Artist Spotlight ]</span>
+            <span class="font-mono text-[9px] uppercase bg-riso-pink text-white px-2 py-0.5 font-bold">[Artist Spotlight]</span>
             <span class="font-mono text-[9px] text-riso-carbon/50">#SPEC-09</span>
           </div>
           <div class="w-full h-36 bg-riso-teal/20 border-2 border-black mb-4 overflow-hidden relative flex items-center justify-center">
@@ -236,369 +179,380 @@
             <span class="relative font-serif text-3xl font-black text-riso-pink overprint-multiply">YUKI MORI</span>
           </div>
           <h3 class="font-syne font-bold text-xl leading-tight text-riso-carbon mb-2 uppercase">CYAN OVERLAYS</h3>
-          <p class="font-sans text-xs text-riso-carbon/80 leading-relaxed">
-            Deconstructing mechanical stencil drum friction through dynamic high-refresh-rate layouts.
-          </p>
+          <p class="font-sans text-xs text-riso-carbon/80 leading-relaxed">Deconstructing mechanical stencil drum friction through dynamic high-refresh-rate layouts.</p>
           <div class="mt-4 flex justify-between items-center pt-2 border-t border-black/10">
-            <button onclick="openZine('yuki')" class="font-mono text-[10px] uppercase underline decoration-riso-pink font-bold hover:text-riso-pink">[ UNCONSTRAIN ]</button>
+            <button onclick="event.stopPropagation();openZine('yuki')" class="interactive-btn font-mono text-[10px] uppercase underline decoration-riso-pink font-bold hover:text-riso-pink">[UNCONSTRAIN]</button>
             <i data-lucide="sparkles" class="w-4 h-4 text-riso-yellow fill-riso-yellow"></i>
           </div>
         </div>
 
-        <!-- Case Card 02: Recent Work Reel -->
-        <div class="physics-card pointer-events-auto absolute left-[450px] top-24 w-72 bg-riso-yellow border-4 border-black p-5 shadow-[6px_6px_0px_rgba(0,0,0,1)] select-none cursor-grab active:cursor-grabbing" data-weight="paper-light">
+        <div id="card-stencil" class="physics-card pointer-events-auto absolute w-72 bg-riso-yellow border-4 border-black p-5 shadow-[6px_6px_0px_rgba(0,0,0,1)] select-none cursor-grab active:cursor-grabbing" data-weight="paper-light">
           <div class="flex items-center gap-2 mb-3 border-b border-black/10 pb-2">
             <i data-lucide="layers" class="w-4 h-4 text-black"></i>
             <span class="font-mono text-[9px] uppercase font-bold">REEL SYSTEM [MP-02]</span>
           </div>
           <h4 class="font-serif text-2xl font-black leading-none uppercase mb-2">STENCIL_DRUM</h4>
-          <p class="font-sans text-xs text-black/90 leading-tight mb-4">
-            Continuous press loop simulation dynamically mapping imagery formats straight into multi-tone channel dots.
-          </p>
-          <button onclick="openZine('stencil')" class="w-full py-2 bg-riso-carbon text-white font-mono text-[10px] uppercase font-bold hover:bg-riso-pink transition-colors">[ INSPECT MASTER SHEET ]</button>
+          <p class="font-sans text-xs text-black/90 leading-tight mb-4">Continuous press loop simulation mapping imagery into multi-tone channel dots.</p>
+          <button onclick="event.stopPropagation();openZine('stencil')" class="interactive-btn w-full py-2 bg-riso-carbon text-white font-mono text-[10px] uppercase font-bold hover:bg-riso-pink transition-colors">[INSPECT SHEET]</button>
         </div>
 
-        <!-- Case Card 03: Alchemic Instruction Sticker -->
-        <div class="physics-card pointer-events-auto absolute left-96 top-[360px] w-64 bg-riso-teal text-white border-4 border-black p-4 shadow-[6px_6px_0px_rgba(0,0,0,1)] select-none cursor-grab active:cursor-grabbing" data-weight="sticker">
-          <div class="flex items-center justify-between mb-3">
-            <span class="font-mono text-[9px] uppercase border border-white px-2 py-0.5 inline-block font-bold">[ GL-04 PROTOCOL ]</span>
+        <div id="card-xray" class="physics-card pointer-events-auto absolute w-72 bg-riso-teal text-white border-4 border-black p-4 shadow-[6px_6px_0px_rgba(0,0,0,1)] select-none cursor-grab active:cursor-grabbing" data-weight="sticker">
+          <div class="flex items-center justify-between mb-3 border-b border-white/20 pb-2">
+            <span class="font-mono text-[9px] uppercase border border-white px-2 py-0.5 font-bold">[GL-04 PROTOCOL]</span>
             <i data-lucide="help-circle" class="w-4 h-4 text-white"></i>
           </div>
           <h4 class="font-syne font-extrabold text-lg leading-tight mb-2 uppercase">LENS INTERFERENCE</h4>
-          <p class="font-sans text-xs text-white/90 leading-snug">
-            Drag this block over the bottom exhibition page grid layout to activate concealed chemical master schemas.
-          </p>
+          <p class="font-sans text-xs text-white/90 leading-snug mb-4">Activate visual filters over static galleries to expose hidden ink formulas.</p>
+          <button onclick="event.stopPropagation();openZine('xray')" class="interactive-btn w-full py-2 bg-white text-riso-carbon font-mono text-[10px] uppercase font-bold hover:bg-riso-yellow transition-colors">[DECRYPT SECRETS]</button>
         </div>
 
-        <!-- Paper Scrap 04: Pure Ink Status sticker -->
-        <div class="physics-card pointer-events-auto absolute left-[880px] top-16 w-48 bg-riso-pink text-white border-4 border-black p-4 shadow-[6px_6px_0px_rgba(0,0,0,1)] select-none cursor-grab active:cursor-grabbing" data-weight="sticker">
-          <div class="text-right font-mono text-[8px] opacity-70">100% RAW FIBERS</div>
-          <div class="text-center font-playfair italic text-5xl font-black my-3">bleed</div>
-          <p class="font-mono text-[9px] text-center uppercase tracking-widest bg-black/20 py-1 font-bold">[ PRESS FLUID OK ]</p>
+        <div id="card-bleed" class="physics-card pointer-events-auto absolute w-60 bg-riso-pink text-white border-4 border-black p-4 shadow-[6px_6px_0px_rgba(0,0,0,1)] select-none cursor-grab active:cursor-grabbing" data-weight="sticker">
+          <div class="text-right font-mono text-[8px] opacity-70 border-b border-white/20 pb-1 mb-2">100% RAW FIBERS</div>
+          <div class="text-center font-playfair italic text-4xl font-black my-2">bleed status</div>
+          <p class="font-mono text-[9px] text-center uppercase tracking-widest bg-black/20 py-1 font-bold mb-3">[PRESS FLUID OK]</p>
+          <button onclick="event.stopPropagation();openZine('bleed')" class="interactive-btn w-full py-1.5 bg-riso-yellow text-riso-carbon font-mono text-[10px] uppercase font-bold hover:bg-white transition-colors">[DETAILS]</button>
         </div>
 
       </div>
     </section>
   </main>
 
-  <!-- SCREEN 2: THE INK LAB SHADER WORKSPACE -->
+  <!-- SCREEN 2: LAB -->
   <main id="screen-lab" class="screen-wrapper w-full hidden-screen">
     <section class="w-full border-b-4 border-black bg-white grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-80px)]">
-      
-      <!-- Live Real-Time Interactive Canvas Processing Area -->
       <div class="lg:col-span-7 border-b-4 lg:border-b-0 lg:border-r-4 border-black p-8 flex flex-col justify-between bg-riso-paper/40 relative overflow-hidden">
         <div class="absolute inset-0 bg-[radial-gradient(#1a1a1a_1.5px,transparent_1.5px)] bg-[size:24px_24px] opacity-5"></div>
-        
         <div>
-          <span class="font-mono text-xs uppercase bg-riso-carbon text-white px-3 py-1 font-bold">[ PRODUCER ENGINE - SI-01 ]</span>
+          <span class="font-mono text-xs uppercase bg-riso-carbon text-white px-3 py-1 font-bold">[PRODUCER ENGINE - SI-01]</span>
           <h2 class="font-serif text-5xl font-black uppercase text-riso-carbon mt-4 tracking-tight leading-none letterpress-debossed">THE HALFTONE SIMULATOR</h2>
         </div>
-
-        <!-- Real-Time Interactive Canvas Screen -->
         <div class="my-8 relative w-full h-[360px] bg-riso-paper border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] overflow-hidden flex items-center justify-center">
           <canvas id="lab-processor-canvas" class="absolute inset-0 w-full h-full mix-blend-multiply"></canvas>
-          
-          <!-- Floating Specimen Glass Plate UI overlay -->
           <div class="relative z-10 text-center select-none p-6 bg-riso-paper/90 border-3 border-black max-w-sm shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform">
             <span class="font-mono text-xs text-riso-pink font-bold uppercase block mb-1">⚡ STENCIL CAPTURE ⚡</span>
             <h3 class="font-serif text-4xl font-extrabold uppercase text-riso-carbon leading-none mb-3">MÄG-RISO GPU</h3>
-            <p class="font-sans text-xs text-riso-carbon/80 leading-relaxed mb-2">Adjust the interactive parameters on the sidebar panel to recalculate the rasterized mesh matrix.</p>
-            <span class="font-mono text-[9px] bg-riso-teal/20 text-riso-teal px-2 py-0.5 font-bold uppercase border border-riso-teal">[ LIVE CHROMATIC EVAL ]</span>
+            <p class="font-sans text-xs text-riso-carbon/80 leading-relaxed mb-2">Adjust parameters to recalculate the rasterized mesh matrix.</p>
+            <span class="font-mono text-[9px] bg-riso-teal/20 text-riso-teal px-2 py-0.5 font-bold uppercase border border-riso-teal">[LIVE CHROMATIC EVAL]</span>
           </div>
         </div>
-
         <div class="font-mono text-[10px] text-riso-carbon/60 flex flex-wrap justify-between gap-2 border-t border-black/10 pt-4">
           <span>ALCHEMIC THREAD: RUNNING</span>
-          <span>PIXEL RE-MAPPING RATE: 60FPS AT SCREEN DPI</span>
+          <span>PIXEL RE-MAPPING: 60FPS</span>
         </div>
       </div>
-
-      <!-- Controls Side Panel -->
       <div class="lg:col-span-5 p-8 flex flex-col justify-between bg-[#F4F1EA]">
         <div>
           <div class="flex items-center gap-2 border-b-2 border-black pb-3 mb-6">
             <i data-lucide="sliders" class="w-5 h-5 text-riso-pink"></i>
-            <h3 class="font-syne font-bold text-2xl uppercase text-riso-carbon tracking-tight">STENCIL SYSTEM PARAMETERS</h3>
+            <h3 class="font-syne font-bold text-2xl uppercase text-riso-carbon tracking-tight">STENCIL PARAMETERS</h3>
           </div>
-          
-          <!-- Controls Grid -->
           <div class="space-y-6">
-            <!-- Halftone Dot Radius -->
             <div>
-              <div class="flex justify-between font-mono text-xs mb-2">
-                <span class="font-bold">HALFTONE MATRIX DENSITY</span>
-                <span id="val-lab-dot" class="text-riso-pink font-bold">6.0px</span>
-              </div>
+              <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">HALFTONE DENSITY</span><span id="val-lab-dot" class="text-riso-pink font-bold">6.0px</span></div>
               <input type="range" id="slider-lab-dot" min="1.5" max="15" value="6" step="0.5" class="w-full accent-riso-pink cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
             </div>
-
-            <!-- Pitch/Frequency spacing -->
             <div>
-              <div class="flex justify-between font-mono text-xs mb-2">
-                <span class="font-bold">GRID FREQUENCY OVERLAP</span>
-                <span id="val-lab-freq" class="text-riso-teal font-bold">16px</span>
-              </div>
+              <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">GRID FREQUENCY</span><span id="val-lab-freq" class="text-riso-teal font-bold">16px</span></div>
               <input type="range" id="slider-lab-freq" min="8" max="40" value="16" step="1" class="w-full accent-riso-teal cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
             </div>
-
-            <!-- Chromatic Misregistration Offset -->
             <div>
-              <div class="flex justify-between font-mono text-xs mb-2">
-                <span class="font-bold">DRUM MISALIGNMENT DRIVER</span>
-                <span id="val-lab-offset" class="text-riso-pink font-bold">6px</span>
-              </div>
+              <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">MISALIGNMENT</span><span id="val-lab-offset" class="text-riso-pink font-bold">6px</span></div>
               <input type="range" id="slider-lab-offset" min="0" max="30" value="6" step="1" class="w-full accent-riso-pink cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
             </div>
-
-            <!-- Color Layer selections -->
             <div class="pt-4 border-t border-black/10">
-              <span class="block font-mono text-xs font-bold mb-3 uppercase tracking-wider">[ Select Ink Drum Emulsion Pair ]</span>
+              <span class="block font-mono text-xs font-bold mb-3 uppercase tracking-wider">[Select Ink Pair]</span>
               <div class="grid grid-cols-3 gap-2">
-                <button onclick="changeInksLab('#FF4B5C', '#00D2D3', 'Pink / Teal')" class="lab-ink-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-pink hover:text-white transition-colors uppercase font-bold text-center active">Pink / Teal</button>
-                <button onclick="changeInksLab('#FF4B5C', '#FECA57', 'Pink / Yellow')" class="lab-ink-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-pink hover:text-white transition-colors uppercase font-bold text-center">Pink / Yellow</button>
-                <button onclick="changeInksLab('#00D2D3', '#FECA57', 'Teal / Yellow')" class="lab-ink-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-teal hover:text-white transition-colors uppercase font-bold text-center">Teal / Yellow</button>
+                <button onclick="changeInksLab('#FF4B5C','#00D2D3','Pink / Teal')" class="lab-ink-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-pink hover:text-white transition-colors uppercase font-bold text-center active">Pink / Teal</button>
+                <button onclick="changeInksLab('#FF4B5C','#FECA57','Pink / Yellow')" class="lab-ink-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-pink hover:text-white transition-colors uppercase font-bold text-center">Pink / Yellow</button>
+                <button onclick="changeInksLab('#00D2D3','#FECA57','Teal / Yellow')" class="lab-ink-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-teal hover:text-white transition-colors uppercase font-bold text-center">Teal / Yellow</button>
               </div>
             </div>
           </div>
         </div>
-
         <div class="mt-8 border-t-2 border-black pt-6">
-          <p class="font-mono text-[11px] text-riso-carbon/70 leading-snug">
-            * ADJUSTMENT FORCES REAL-TIME BUFFER PROCESSING IN CANVAS REDRAW TICK, EMULATING WEBGL INK SATURATION MATHEMATICS WITHOUT LOADING RETRY OVERHEADS.
-          </p>
+          <p class="font-mono text-[11px] text-riso-carbon/70 leading-snug">* Adjustment forces real-time buffer processing in canvas redraw tick.</p>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- SCREEN 3: EDITORIAL SPATIAL ARCHIVE DISPLAY -->
+  <!-- SCREEN 3: ARCHIVE -->
   <main id="screen-archive" class="screen-wrapper w-full hidden-screen pb-16">
     <section class="max-w-6xl mx-auto px-6 pt-12">
       <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-black pb-8">
         <div>
-          <span class="font-mono text-xs uppercase text-riso-pink font-bold tracking-widest block mb-2">[ EXHIBITION GHOST MAP - GL-04 ]</span>
+          <span class="font-mono text-xs uppercase text-riso-pink font-bold tracking-widest block mb-2">[EXHIBITION GHOST MAP - GL-04]</span>
           <h2 class="font-serif text-5xl md:text-7xl font-black uppercase tracking-tight text-riso-carbon letterpress-debossed">THE STENCIL GALLERY</h2>
         </div>
         <div class="max-w-sm">
-          <p class="font-sans text-sm text-riso-carbon/70 leading-relaxed">
-            A beautiful, physical spatial blueprint inspector. Hover over and drag across the active grid frame. A circular high-contrast lens isolates and translates concealed alchemic formulas in real-time.
-          </p>
+          <p class="font-sans text-sm text-riso-carbon/70 leading-relaxed">Hover and drag across the grid. A circular high-contrast lens exposes concealed alchemic formulas.</p>
         </div>
       </div>
 
-      <!-- X-RAY INSPECT CONTROLLER LENS GRAPHIC (RESTORED EXACTLY AS IT WAS) -->
       <div id="xray-container" class="relative w-full h-[450px] bg-riso-carbon border-4 border-black overflow-hidden select-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] cursor-crosshair">
-        
-        <!-- LAYER 01: The Standard Beautiful Presentation Layer -->
         <div class="absolute inset-0 p-8 md:p-12 flex flex-col justify-between bg-riso-paper transition-all duration-300">
           <div class="flex justify-between items-start">
             <h3 class="font-serif text-3xl font-black text-riso-carbon uppercase">STUDIO CASE_094</h3>
-            <span class="font-mono text-xs border-2 border-black px-3 py-1 bg-riso-yellow font-bold">[ STANDARD VIEW ]</span>
+            <span class="font-mono text-xs border-2 border-black px-3 py-1 bg-riso-yellow font-bold">[STANDARD VIEW]</span>
           </div>
-
           <div class="grid grid-cols-1 md:grid-cols-3 gap-8 my-4">
-            <div>
-              <h4 class="font-mono text-xs font-bold text-riso-pink uppercase mb-2">// 01 / STENCIL DESIGN</h4>
-              <p class="text-xs text-riso-carbon/85 leading-relaxed">Creating clean layout hierarchies utilizing brutalist margins and strict mechanical grid alignments.</p>
-            </div>
-            <div>
-              <h4 class="font-mono text-xs font-bold text-riso-teal uppercase mb-2">// 02 / COLOR OVERPRINT</h4>
-              <p class="text-xs text-riso-carbon/85 leading-relaxed">Translucent inks blending organically. Double-channel processing reveals vibrant, unpredictable spot color highlights.</p>
-            </div>
-            <div>
-              <h4 class="font-mono text-xs font-bold text-riso-carbon uppercase mb-2">// 03 / MECHANICAL RUN</h4>
-              <p class="text-xs text-riso-carbon/85 leading-relaxed">Continuous production. Matter.js calculations dynamic alignment parameters for responsive layout grids.</p>
-            </div>
+            <div><h4 class="font-mono text-xs font-bold text-riso-pink uppercase mb-2">//01 / STENCIL DESIGN</h4><p class="text-xs text-riso-carbon/85 leading-relaxed">Creating clean layout hierarchies utilizing brutalist margins and strict mechanical grid alignments.</p></div>
+            <div><h4 class="font-mono text-xs font-bold text-riso-teal uppercase mb-2">//02 / COLOR OVERPRINT</h4><p class="text-xs text-riso-carbon/85 leading-relaxed">Translucent inks blending organically. Double-channel processing reveals vibrant spot color highlights.</p></div>
+            <div><h4 class="font-mono text-xs font-bold text-riso-carbon uppercase mb-2">//03 / MECHANICAL RUN</h4><p class="text-xs text-riso-carbon/85 leading-relaxed">Continuous production. Matter.js calculates dynamic alignment parameters for responsive grids.</p></div>
           </div>
-
           <div class="flex justify-between items-center border-t-2 border-black pt-4">
-            <span class="font-mono text-xs">[ PRESS SYSTEM v1.5 ]</span>
-            <span class="font-mono text-xs">HOVER & SWIPE OVER CONTAINER TO REVEAL ALCHEMIC FORMULAS</span>
+            <span class="font-mono text-xs">[PRESS SYSTEM v1.5]</span>
+            <span class="font-mono text-xs">HOVER & SWIPE TO REVEAL ALCHEMIC FORMULAS</span>
           </div>
         </div>
-
-        <!-- LAYER 02: The Invisible Alchemic Ghost Layer (Exposed strictly inside dynamic clip path mask) -->
-        <div id="xray-ghost-layer" class="absolute inset-0 p-8 md:p-12 flex flex-col justify-between bg-riso-pink text-white pointer-events-none select-none" style="clip-path: circle(0px at 0px 0px); -webkit-clip-path: circle(0px at 0px 0px);">
+        <div id="xray-ghost-layer" class="absolute inset-0 p-8 md:p-12 flex flex-col justify-between bg-riso-pink text-white pointer-events-none select-none" style="clip-path:circle(0px at 0px 0px);-webkit-clip-path:circle(0px at 0px 0px);">
           <div class="flex justify-between items-start">
             <h3 class="font-serif text-3xl font-black text-riso-yellow uppercase italic tracking-tight">ALCHEMIC PRINT MANIFESTO</h3>
-            <span class="font-mono text-xs border-2 border-white px-3 py-1 bg-riso-carbon text-white font-bold">// GHOST SECRETS EXPOSED //</span>
+            <span class="font-mono text-xs border-2 border-white px-3 py-1 bg-riso-carbon text-white font-bold">//GHOST SECRETS EXPOSED//</span>
           </div>
-
           <div class="grid grid-cols-1 md:grid-cols-3 gap-8 my-4">
-            <div class="border-2 border-white border-dashed p-4 bg-black/20">
-              <span class="font-mono text-xs text-riso-yellow font-bold block mb-1">INCANTATION 1.01</span>
-              <p class="font-mono text-[11px] leading-tight text-white/95">vec2 distortedUv = vUv + (noise.rg - 0.5) * 0.007 * (1.0 + uVelocity * 0.1);</p>
-            </div>
-            <div class="border-2 border-white border-dashed p-4 bg-black/20">
-              <span class="font-mono text-xs text-riso-yellow font-bold block mb-1">DAMPING FORMULA</span>
-              <p class="font-mono text-[11px] leading-tight text-white/95">velocity.current = gsap.utils.interpolate(velocity.current, instantVelocity, 0.12);</p>
-            </div>
-            <div class="border-2 border-white border-dashed p-4 bg-black/20">
-              <span class="font-mono text-xs text-riso-yellow font-bold block mb-1">PRESS REGISTRATION</span>
-              <p class="font-mono text-[11px] leading-tight text-white/95">frictionAir: 0.05, restitution: 0.4, density: 0.005</p>
-            </div>
+            <div class="border-2 border-white border-dashed p-4 bg-black/20"><span class="font-mono text-xs text-riso-yellow font-bold block mb-1">INCANTATION 1.01</span><p class="font-mono text-[11px] leading-tight text-white/95">vec2 distortedUv = vUv + (noise.rg - 0.5) * 0.007 * (1.0 + uVelocity * 0.1);</p></div>
+            <div class="border-2 border-white border-dashed p-4 bg-black/20"><span class="font-mono text-xs text-riso-yellow font-bold block mb-1">DAMPING FORMULA</span><p class="font-mono text-[11px] leading-tight text-white/95">velocity.current = gsap.utils.interpolate(velocity.current, instantVelocity, 0.12);</p></div>
+            <div class="border-2 border-white border-dashed p-4 bg-black/20"><span class="font-mono text-xs text-riso-yellow font-bold block mb-1">PRESS REGISTRATION</span><p class="font-mono text-[11px] leading-tight text-white/95">frictionAir: 0.05, restitution: 0.4, density: 0.005</p></div>
           </div>
-
           <div class="flex justify-between items-center border-t-2 border-white pt-4 font-mono text-xs text-riso-yellow">
-            <span>[ SYSTEM DECRYPTION ACTIVE ]</span>
-            <span>SHADERS RENDERING DIRECTLY TO GPU PIPELINE</span>
+            <span>[SYSTEM DECRYPTION ACTIVE]</span><span>SHADERS RENDERING DIRECTLY TO GPU</span>
           </div>
         </div>
-
-        <!-- Floating dashed lens cue -->
         <div id="xray-lens-cue" class="absolute w-[180px] h-[180px] border-4 border-dashed border-riso-yellow rounded-full pointer-events-none transform -translate-x-1/2 -translate-y-1/2 z-50 mix-blend-difference hidden"></div>
-
       </div>
 
-      <!-- INTERACTIVE LETTERS DISPLAY WITH DRIP/MORPH (MP-02 Letterpress Section) -->
       <div class="mt-20 border-t-4 border-black pt-16 grid grid-cols-1 md:grid-cols-2 gap-12">
         <div>
-          <span class="font-mono text-xs uppercase text-riso-teal font-bold tracking-widest block mb-2">[ ACTIVE TYPE SPECIES - SI-02 ]</span>
+          <span class="font-mono text-xs uppercase text-riso-teal font-bold tracking-widest block mb-2">[ACTIVE TYPE SPECIES - SI-02]</span>
           <h3 class="font-syne text-4xl font-extrabold uppercase leading-none text-riso-carbon mb-6">THE ALCHEMIST'S TEXT</h3>
-          <p class="font-sans text-sm text-riso-carbon/80 leading-relaxed mb-6">
-            Risograph typography is not flat. It has physical weight, depth, and ink-bleed parameters. Move your cursor aggressively over the target header block on the right side to watch color channels break and bleed ink drops under frictional velocity calculations.
-          </p>
-          <div class="border-3 border-black p-4 bg-riso-yellow/20 font-mono text-xs leading-relaxed">
-            <strong>LETTERPRESS RULES:</strong> Every dynamic character is filtered through a customized SVG displacement turbulence mapping grid to simulate wet fibers expansion on rough paper stock.
-          </div>
+          <p class="font-sans text-sm text-riso-carbon/80 leading-relaxed mb-6">Risograph typography has physical weight, depth, and ink-bleed. Move your cursor aggressively over the target to watch color channels break and bleed.</p>
+          <div class="border-3 border-black p-4 bg-riso-yellow/20 font-mono text-xs leading-relaxed"><strong>LETTERPRESS RULES:</strong> Dynamic characters filtered through SVG displacement turbulence to simulate wet fiber expansion.</div>
         </div>
-
         <div class="flex items-center justify-center p-8 bg-white border-4 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] overflow-hidden min-h-[220px]">
-          <!-- Active morphing letters specimen -->
-          <h1 id="dynamic-morphing-type" class="text-5xl md:text-6xl font-syne font-extrabold uppercase tracking-tight text-center leading-none cursor-default select-none transition-transform duration-75" style="filter: url(#riso-ink-bleed);">
-            BLEEDING INK
-          </h1>
+          <h1 id="dynamic-morphing-type" class="text-5xl md:text-6xl font-syne font-extrabold uppercase tracking-tight text-center leading-none cursor-default select-none transition-transform duration-75" style="filter:url(#riso-ink-bleed);">BLEEDING INK</h1>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- NEWS FEED & COLLABORATIVE INTAKE (FOOTER) -->
-  <section class="w-full bg-riso-carbon text-[#F4F1EA] py-16 px-6 border-t-4 border-black relative">
-    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
-      
-      <!-- Newsletter & Manifest Columns -->
-      <div class="lg:col-span-6 flex flex-col justify-between">
+  <!-- SCREEN 4: COLOR SEPARATION LAB -->
+  <main id="screen-separation" class="screen-wrapper w-full hidden-screen pb-16">
+    <section class="max-w-6xl mx-auto px-6 pt-12">
+      <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-black pb-8">
         <div>
-          <span class="font-mono text-xs text-riso-yellow font-bold tracking-widest block mb-2">[ CONTINUOUS INK DISPERSION ]</span>
-          <h2 class="font-serif text-5xl font-black uppercase leading-none tracking-tight mb-8">THE WEEKLY RUN</h2>
-          
-          <div class="space-y-6">
-            <div class="border-l-4 border-riso-pink pl-4 py-1">
-              <span class="font-mono text-[10px] text-[#F4F1EA]/60">[ MAY 2026 // SYSTEM UPDATE_48 ]</span>
-              <h4 class="font-syne font-bold text-lg text-riso-yellow leading-tight mt-1">THE TACTILE WEB TRANSITION</h4>
-              <p class="text-xs text-[#F4F1EA]/80 mt-1">Modern interfaces require visual friction. Stencils and letterpress frameworks return direct engagement control to web users.</p>
-            </div>
-            <div class="border-l-4 border-riso-teal pl-4 py-1">
-              <span class="font-mono text-[10px] text-[#F4F1EA]/60">[ APRIL 2026 // SYSTEM UPDATE_47 ]</span>
-              <h4 class="font-syne font-bold text-lg text-riso-teal leading-tight mt-1">VARIABLE VECTOR DISPLACEMENT</h4>
-              <p class="text-xs text-[#F4F1EA]/80 mt-1">Mapping real-time mouse speed vectors directly to displacement displacement coordinates for liquid print visuals.</p>
-            </div>
-          </div>
+          <span class="font-mono text-xs uppercase text-riso-purple font-bold tracking-widest block mb-2">[COLOR SEPARATION MATRIX - SI-03]</span>
+          <h2 class="font-serif text-5xl md:text-7xl font-black uppercase tracking-tight text-riso-carbon letterpress-debossed">DRUM ISOLATOR</h2>
         </div>
-
-        <div class="mt-12 border-t border-white/20 pt-6">
-          <p class="font-mono text-xs text-[#F4F1EA]/50 leading-relaxed">
-            MÄG-RISO was engineered to manifest elite-level interactive development capabilities. Developed utilizing Matter.js physics grids, custom Web Audio oscillator arrays, and SVG displacement filter matrices.
-          </p>
+        <div class="max-w-sm">
+          <p class="font-sans text-sm text-riso-carbon/70 leading-relaxed">Toggle individual risograph color channels to see how each ink drum contributes to the final composite. True to physical stencil separation.</p>
         </div>
       </div>
 
-      <!-- CRUMPLE AND TOSS COLLABORATIVE FORM -->
-      <div id="intake-form-container" class="lg:col-span-6 bg-[#F4F1EA] text-riso-carbon border-4 border-black p-8 shadow-[8px_8px_0px_rgba(255,75,92,1)] relative overflow-hidden flex flex-col justify-between min-h-[460px]">
-        
-        <!-- Successful submission fold transition state layer -->
-        <div id="form-success-overlay" class="absolute inset-0 bg-riso-yellow z-40 p-8 flex flex-col justify-between pointer-events-none opacity-0 transition-opacity duration-300">
-          <div>
-            <div class="w-12 h-12 rounded-full border-4 border-black flex items-center justify-center mb-6 bg-white shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-              <i data-lucide="check" class="w-6 h-6 text-black stroke-[3]"></i>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- The Composite Canvas -->
+        <div class="lg:col-span-8">
+          <div class="relative w-full h-[450px] bg-riso-paper border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <canvas id="separation-canvas" class="absolute inset-0 w-full h-full"></canvas>
+            <div class="absolute bottom-4 left-4 z-10">
+              <span class="font-mono text-[10px] bg-white border-2 border-black px-2 py-1 font-bold uppercase">[LIVE COMPOSITE OUTPUT]</span>
             </div>
-            <h3 class="font-serif text-4xl font-black uppercase leading-none mb-4">INCANTATION RECIEVED</h3>
-            <p class="font-sans text-sm text-black/80 leading-relaxed">Your details have been successfully processed, stamped, and printed. The canvas sheet has been crumpled and fired into the gravity engine below.</p>
           </div>
-          <button onclick="resetContactForm()" class="w-full py-3 bg-riso-carbon text-white font-mono text-xs uppercase tracking-widest border-2 border-black hover:bg-riso-pink transition-colors">[ FEED NEW WORK SHEET ]</button>
         </div>
 
+        <!-- Channel Toggles -->
+        <div class="lg:col-span-4 space-y-4">
+          <h3 class="font-syne font-bold text-xl uppercase text-riso-carbon border-b-2 border-black pb-2">ACTIVE DRUMS</h3>
+          
+          <div id="channel-pink" class="channel-strip cursor-pointer border-3 border-black bg-riso-pink text-white p-4 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-1 transition-transform" onclick="toggleChannel('pink')">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="font-mono text-[10px] uppercase font-bold opacity-80">CH 01</span>
+                <h4 class="font-syne font-bold text-lg uppercase">FLUORESCENT PINK</h4>
+              </div>
+              <div class="w-6 h-6 bg-white border-2 border-black flex items-center justify-center">
+                <div id="check-pink" class="w-3 h-3 bg-riso-carbon"></div>
+              </div>
+            </div>
+            <div class="font-mono text-[10px] mt-2 opacity-80">MISALIGN: +2px X / -1px Y</div>
+          </div>
+
+          <div id="channel-teal" class="channel-strip cursor-pointer border-3 border-black bg-riso-teal text-white p-4 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-1 transition-transform" onclick="toggleChannel('teal')">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="font-mono text-[10px] uppercase font-bold opacity-80">CH 02</span>
+                <h4 class="font-syne font-bold text-lg uppercase">AQUA TEAL</h4>
+              </div>
+              <div class="w-6 h-6 bg-white border-2 border-black flex items-center justify-center">
+                <div id="check-teal" class="w-3 h-3 bg-riso-carbon"></div>
+              </div>
+            </div>
+            <div class="font-mono text-[10px] mt-2 opacity-80">MISALIGN: -3px X / +2px Y</div>
+          </div>
+
+          <div id="channel-yellow" class="channel-strip cursor-pointer border-3 border-black bg-riso-yellow text-riso-carbon p-4 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-1 transition-transform" onclick="toggleChannel('yellow')">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="font-mono text-[10px] uppercase font-bold opacity-60">CH 03</span>
+                <h4 class="font-syne font-bold text-lg uppercase">BRIGHT YELLOW</h4>
+              </div>
+              <div class="w-6 h-6 bg-white border-2 border-black flex items-center justify-center">
+                <div id="check-yellow" class="w-3 h-3 bg-riso-carbon"></div>
+              </div>
+            </div>
+            <div class="font-mono text-[10px] mt-2 opacity-60">MISALIGN: +1px X / +3px Y</div>
+          </div>
+
+          <div id="channel-purple" class="channel-strip cursor-pointer border-3 border-black bg-riso-purple text-white p-4 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-1 transition-transform" onclick="toggleChannel('purple')">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="font-mono text-[10px] uppercase font-bold opacity-80">CH 04</span>
+                <h4 class="font-syne font-bold text-lg uppercase">PURPLE</h4>
+              </div>
+              <div class="w-6 h-6 bg-white border-2 border-black flex items-center justify-center">
+                <div id="check-purple" class="w-3 h-3 bg-riso-carbon"></div>
+              </div>
+            </div>
+            <div class="font-mono text-[10px] mt-2 opacity-80">MISALIGN: -1px X / -2px Y</div>
+          </div>
+
+          <div class="border-t-2 border-black pt-4 mt-4">
+            <p class="font-mono text-[10px] text-riso-carbon/60 leading-relaxed">* Click any channel to toggle its drum on/off. The composite updates in real-time simulating physical overprint layers.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- SCREEN 5: PRINT QUEUE TIMELINE -->
+  <main id="screen-queue" class="screen-wrapper w-full hidden-screen pb-16">
+    <section class="max-w-6xl mx-auto px-6 pt-12">
+      <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-black pb-8">
+        <div>
+          <span class="font-mono text-xs uppercase text-riso-orange font-bold tracking-widest block mb-2">[PRODUCTION LOG - PL-01]</span>
+          <h2 class="font-serif text-5xl md:text-7xl font-black uppercase tracking-tight text-riso-carbon letterpress-debossed">THE PRINT QUEUE</h2>
+        </div>
+        <div class="max-w-sm">
+          <p class="font-sans text-sm text-riso-carbon/70 leading-relaxed">A chronological feed of every sheet that has passed through the press. Each card carries its unique ink profile, drum sequence, and completion timestamp.</p>
+        </div>
+      </div>
+
+      <div class="space-y-6" id="queue-feed">
+        <!-- Queue items injected by JS -->
+      </div>
+    </section>
+  </main>
+
+  <!-- SCREEN 6: PROJECT VIEW -->
+  <main id="screen-project-view" class="screen-wrapper w-full hidden-screen min-h-[calc(100vh-80px)] bg-riso-paper pb-16">
+    <section class="max-w-4xl mx-auto px-6 pt-12">
+      <button onclick="switchScreen('desk')" class="font-mono text-xs uppercase font-bold tracking-wider border-2 border-black bg-white px-4 py-2 shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:bg-riso-pink hover:text-white transition-colors active:translate-y-0.5 mb-10">← BACK TO DESK WORKSPACE</button>
+      <div class="border-4 border-black bg-white p-8 md:p-12 shadow-[8px_8px_0px_rgba(0,0,0,1)] relative overflow-hidden">
+        <div class="absolute -top-6 -right-6 w-32 h-32 bg-riso-pink text-white rounded-full flex items-center justify-center font-mono text-[10px] tracking-widest uppercase rotate-12 overprint-multiply">STENCIL PRO</div>
+        <span id="project-view-tag" class="font-mono text-xs uppercase font-bold tracking-widest text-riso-pink">// ALCHEMIC SPECIFICATION //</span>
+        <h2 id="project-view-title" class="font-serif text-5xl md:text-6xl font-black uppercase text-riso-carbon leading-none mt-4 mb-6">PROJECT SPECIMEN</h2>
+        <div class="w-24 h-1.5 bg-riso-teal mb-10"></div>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          <div class="md:col-span-8 space-y-6">
+            <h3 class="font-syne font-bold text-xl uppercase tracking-tight text-riso-carbon">SYSTEM DESCRIPTION & TECHNICAL BLUEPRINTS</h3>
+            <p id="project-view-body" class="font-sans text-sm text-riso-carbon/80 leading-relaxed">Standard project presentation. Deep case specifications and full resolution alchemic vector files.</p>
+            <p class="font-sans text-sm text-riso-carbon/80 leading-relaxed">Our unique workflow implements a Headless CMS interface allowing instant overprint swaps and micro-particle modifications.</p>
+            <div class="border-3 border-black border-dashed p-6 bg-riso-yellow/15 space-y-4">
+              <h4 class="font-mono text-xs font-bold text-riso-carbon uppercase tracking-wider">// PIPELINE STATISTICS //</h4>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div class="border-2 border-black bg-white p-2"><div class="font-serif text-2xl font-black text-riso-pink">60</div><div class="font-mono text-[8px] uppercase">FPS TICK</div></div>
+                <div class="border-2 border-black bg-white p-2"><div class="font-serif text-2xl font-black text-riso-teal">2.8ms</div><div class="font-mono text-[8px] uppercase">LATENCY</div></div>
+                <div class="border-2 border-black bg-white p-2"><div class="font-serif text-2xl font-black text-riso-carbon">DUAL</div><div class="font-mono text-[8px] uppercase">DRUMS</div></div>
+                <div class="border-2 border-black bg-white p-2"><div class="font-serif text-2xl font-black text-riso-pink">100%</div><div class="font-mono text-[8px] uppercase">TRANS</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="md:col-span-4 space-y-6 bg-riso-paper border-3 border-black p-5 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+            <h4 class="font-syne font-bold text-sm uppercase text-riso-carbon border-b border-black pb-2">SPEC SHEET</h4>
+            <div class="font-mono text-[11px] space-y-3">
+              <div><span class="text-riso-carbon/50 block">ROLL INKS:</span><span class="font-bold">FLUO PINK, TEAL</span></div>
+              <div><span class="text-riso-carbon/50 block">GRAVITY DRIVER:</span><span id="project-view-weight" class="font-bold">CARDBOARD (0.005)</span></div>
+              <div><span class="text-riso-carbon/50 block">VECTOR CORES:</span><span class="font-bold">GSAP INTERPOLATION</span></div>
+            </div>
+            <button onclick="toggleGlobalAudio()" class="w-full py-2 bg-riso-carbon text-white font-mono text-[10px] uppercase font-bold tracking-widest hover:bg-riso-teal transition-colors">GENERATE AUDIO SWEET ⚡</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER / NEWS / FORM -->
+  <section class="w-full bg-riso-carbon text-[#F4F1EA] py-16 px-6 border-t-4 border-black relative">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div class="lg:col-span-6 flex flex-col justify-between">
+        <div>
+          <span class="font-mono text-xs text-riso-yellow font-bold tracking-widest block mb-2">[CONTINUOUS INK DISPERSION]</span>
+          <h2 class="font-serif text-5xl font-black uppercase leading-none tracking-tight mb-8">THE WEEKLY RUN</h2>
+          <div class="space-y-6">
+            <div class="border-l-4 border-riso-pink pl-4 py-1">
+              <span class="font-mono text-[10px] text-[#F4F1EA]/60">[MAY 2026 // SYSTEM UPDATE_48]</span>
+              <h4 class="font-syne font-bold text-lg text-riso-yellow leading-tight mt-1">THE TACTILE WEB TRANSITION</h4>
+              <p class="text-xs text-[#F4F1EA]/80 mt-1">Modern interfaces require visual friction. Stencils and letterpress frameworks return direct engagement.</p>
+            </div>
+            <div class="border-l-4 border-riso-teal pl-4 py-1">
+              <span class="font-mono text-[10px] text-[#F4F1EA]/60">[APRIL 2026 // SYSTEM UPDATE_47]</span>
+              <h4 class="font-syne font-bold text-lg text-riso-teal leading-tight mt-1">VARIABLE VECTOR DISPLACEMENT</h4>
+              <p class="text-xs text-[#F4F1EA]/80 mt-1">Mapping real-time mouse speed vectors directly to displacement coordinates for liquid print visuals.</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-12 border-t border-white/20 pt-6">
+          <p class="font-mono text-xs text-[#F4F1EA]/50 leading-relaxed">MÄG-RISO was engineered to manifest elite-level interactive development capabilities.</p>
+        </div>
+      </div>
+
+      <div id="intake-form-container" class="lg:col-span-6 bg-[#F4F1EA] text-riso-carbon border-4 border-black p-8 shadow-[8px_8px_0px_rgba(255,75,92,1)] relative overflow-hidden flex flex-col justify-between min-h-[460px]">
+        <div id="form-success-overlay" class="absolute inset-0 bg-riso-yellow z-40 p-8 flex flex-col justify-between pointer-events-none opacity-0 transition-opacity duration-300">
+          <div>
+            <div class="w-12 h-12 rounded-full border-4 border-black flex items-center justify-center mb-6 bg-white shadow-[2px_2px_0px_rgba(0,0,0,1)]"><i data-lucide="check" class="w-6 h-6 text-black stroke-[3]"></i></div>
+            <h3 class="font-serif text-4xl font-black uppercase leading-none mb-4">INCANTATION RECEIVED</h3>
+            <p class="font-sans text-sm text-black/80 leading-relaxed">Your details have been processed, stamped, and printed. The sheet has been crumpled and fired into the gravity engine.</p>
+          </div>
+          <button onclick="resetContactForm()" class="w-full py-3 bg-riso-carbon text-white font-mono text-xs uppercase tracking-widest border-2 border-black hover:bg-riso-pink transition-colors">[FEED NEW WORK SHEET]</button>
+        </div>
         <div>
           <div class="flex items-center justify-between border-b-2 border-black pb-3 mb-6">
             <h3 class="font-serif text-2xl font-black uppercase tracking-tight">// ALCHEMIC FORMULATION //</h3>
             <i data-lucide="scroll" class="w-5 h-5 text-riso-pink animate-pulse"></i>
           </div>
-
-          <!-- Active form structure -->
           <form id="contact-form" onsubmit="handleCrumpleSubmit(event)" class="space-y-4">
-            <div>
-              <label class="block font-mono text-[9px] uppercase font-bold text-riso-carbon/70 mb-1">[ 01 / STENCIL SIGNATURE ]</label>
-              <input required type="text" id="form-name" placeholder="ENTER YOUR FULL STUDIO ALIAS" class="w-full bg-white border-2 border-black px-3 py-2 text-xs font-mono placeholder:text-riso-carbon/40 focus:bg-riso-yellow/15 focus:outline-none focus:border-riso-pink transition-colors">
-            </div>
-            <div>
-              <label class="block font-mono text-[9px] uppercase font-bold text-riso-carbon/70 mb-1">[ 02 / TRANSMISSION FREQUENCY ]</label>
-              <input required type="email" id="form-email" placeholder="YOUR-FREQUENCY@DOMAIN.COM" class="w-full bg-white border-2 border-black px-3 py-2 text-xs font-mono placeholder:text-riso-carbon/40 focus:bg-riso-yellow/15 focus:outline-none focus:border-riso-pink transition-colors">
-            </div>
-            <div>
-              <label class="block font-mono text-[9px] uppercase font-bold text-riso-carbon/70 mb-1">[ 03 / INTENT DISPERSION ]</label>
-              <textarea required id="form-message" rows="3" placeholder="OUTLINE YOUR COOPERATIVE SPELL OBJECTIVES..." class="w-full bg-white border-2 border-black px-3 py-2 text-xs font-mono placeholder:text-riso-carbon/40 focus:bg-riso-yellow/15 focus:outline-none focus:border-riso-pink transition-colors resize-none"></textarea>
-            </div>
-
-            <!-- Kinetic Action Button -->
-            <div class="pt-2">
-              <button type="submit" class="w-full py-3 bg-riso-teal text-white font-mono text-xs uppercase font-bold tracking-widest border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:shadow-none transition-all">
-                [ COMPILE, STAMP & CRUMPLE SHEET ]
-              </button>
-            </div>
+            <div><label class="block font-mono text-[9px] uppercase font-bold text-riso-carbon/70 mb-1">[01 / STENCIL SIGNATURE]</label><input required type="text" id="form-name" placeholder="ENTER YOUR FULL STUDIO ALIAS" class="w-full bg-white border-2 border-black px-3 py-2 text-xs font-mono placeholder:text-riso-carbon/40 focus:bg-riso-yellow/15 focus:outline-none focus:border-riso-pink transition-colors"></div>
+            <div><label class="block font-mono text-[9px] uppercase font-bold text-riso-carbon/70 mb-1">[02 / TRANSMISSION FREQUENCY]</label><input required type="email" id="form-email" placeholder="YOUR-FREQUENCY@DOMAIN.COM" class="w-full bg-white border-2 border-black px-3 py-2 text-xs font-mono placeholder:text-riso-carbon/40 focus:bg-riso-yellow/15 focus:outline-none focus:border-riso-pink transition-colors"></div>
+            <div><label class="block font-mono text-[9px] uppercase font-bold text-riso-carbon/70 mb-1">[03 / INTENT DISPERSION]</label><textarea required id="form-message" rows="3" placeholder="OUTLINE YOUR COOPERATIVE SPELL OBJECTIVES..." class="w-full bg-white border-2 border-black px-3 py-2 text-xs font-mono placeholder:text-riso-carbon/40 focus:bg-riso-yellow/15 focus:outline-none focus:border-riso-pink transition-colors resize-none"></textarea></div>
+            <div class="pt-2"><button type="submit" class="w-full py-3 bg-riso-teal text-white font-mono text-xs uppercase font-bold tracking-widest border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:shadow-none transition-all">[COMPILE, STAMP & CRUMPLE SHEET]</button></div>
           </form>
         </div>
-
-        <p class="font-mono text-[10px] text-riso-carbon/40 mt-6 leading-none text-center">
-          * INK SUBMISSION TRIGGERS PHYSICAL DESK CRUMPLE TRANSIENTS
-        </p>
+        <p class="font-mono text-[10px] text-riso-carbon/40 mt-6 leading-none text-center">* INK SUBMISSION TRIGGERS PHYSICAL DESK CRUMPLE TRANSIENTS</p>
       </div>
-
     </div>
   </section>
 
-  <!-- IMMERSIVE COMPONENT: ZINE MODAL UNFOLD (MP-01 3D Concertina Fold Modal) -->
+  <!-- ZINE MODAL -->
   <div id="zine-modal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-    <!-- 3D Transform Viewport -->
-    <div class="relative flex w-[98%] max-w-[1020px] h-[550px]" style="perspective: 2000px;">
-      
-      <!-- Close Trigger Button -->
-      <button onclick="closeZine()" class="absolute -top-12 right-0 font-mono text-xs uppercase tracking-widest text-[#F4F1EA] bg-riso-pink border-2 border-black px-4 py-1.5 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:shadow-none transition-all z-[1000]">
-        [ CRUMPLE SHEET & EXPELL ]
-      </button>
-
-      <!-- PANEL 1: Left Page Cover -->
+    <div class="relative flex w-[98%] max-w-[1020px] h-[550px]" style="perspective:2000px;">
+      <button onclick="closeZine()" class="absolute -top-12 right-0 font-mono text-xs uppercase tracking-widest text-[#F4F1EA] bg-riso-pink border-2 border-black px-4 py-1.5 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:shadow-none transition-all z-[1000]">[CRUMPLE SHEET & EXPELL]</button>
       <div id="panel-1" class="relative w-1/3 h-full bg-[#F4F1EA] border-4 border-black p-6 flex flex-col justify-between select-none">
         <div>
           <span id="zine-category" class="font-mono text-[10px] uppercase tracking-wider text-riso-pink font-bold block mb-1">⚡ SPOTLIGHT // PROJECT</span>
           <h2 id="zine-title" class="font-serif text-3xl font-black uppercase text-riso-carbon leading-none mb-4">SYSTEMS MASTER</h2>
           <div class="w-12 h-1 bg-riso-teal mb-6"></div>
         </div>
-        <p id="zine-description" class="font-mono text-xs text-riso-carbon/80 leading-relaxed">
-          Default case study presentation layout showcasing tactile paper physics.
-        </p>
+        <p id="zine-description" class="font-mono text-xs text-riso-carbon/80 leading-relaxed">Default case study presentation.</p>
         <div class="font-mono text-[10px] text-riso-carbon/50">MÄG-RISO ARCHIVE SERIES</div>
-
-        <!-- PANEL 2: Middle Page Content (HTML Nested for 3D Concertina Fold Mechanics) -->
-        <div id="panel-2" class="absolute top-[-4px] left-[98.8%] w-full h-full bg-[#F4F1EA] border-4 border-black p-6 flex flex-col justify-between overflow-y-auto select-none" style="transform-origin: right center;">
-          
-          <!-- Hinge Overlay Ambient Crease Shadow -->
+        <div id="panel-2" class="absolute top-[-4px] left-[98.8%] w-full h-full bg-[#F4F1EA] border-4 border-black p-6 flex flex-col justify-between overflow-y-auto select-none" style="transform-origin:right center;">
           <div id="crease-shadow-1" class="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-black/25 to-transparent pointer-events-none z-10"></div>
-
           <div>
             <h3 class="font-syne font-bold text-lg text-riso-teal mb-3 uppercase">// EXECUTION RUN //</h3>
-            <p id="zine-body" class="font-sans text-xs text-riso-carbon leading-relaxed mb-4">
-              Detailed technical blueprint metrics indicating responsive physical calculations and color separation metrics.
-            </p>
+            <p id="zine-body" class="font-sans text-xs text-riso-carbon leading-relaxed mb-4">Detailed technical blueprint metrics.</p>
           </div>
-
-          <!-- PANEL 3: Right Page (HTML Nested Inside Panel 2) -->
-          <div id="panel-3" class="absolute top-[-4px] left-[98.8%] w-full h-full bg-[#F4F1EA] border-4 border-black p-6 flex flex-col justify-between select-none" style="transform-origin: left center;">
-            
-            <!-- Hinge Overlay Ambient Crease Shadow 2 -->
+          <div id="panel-3" class="absolute top-[-4px] left-[98.8%] w-full h-full bg-[#F4F1EA] border-4 border-black p-6 flex flex-col justify-between select-none" style="transform-origin:left center;">
             <div id="crease-shadow-2" class="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-black/25 to-transparent pointer-events-none z-10"></div>
-
-            <div>
+            <div class="space-y-4">
               <h3 class="font-syne font-bold text-lg text-riso-yellow mb-3 uppercase">// TECHNICAL BLUEPRINTS //</h3>
               <div class="border-2 border-dashed border-riso-carbon/30 p-3 bg-riso-pink/10 font-mono text-[10px] space-y-1">
                 <div><strong>STENCIL DRUM:</strong> DUAL MATRIX</div>
@@ -607,433 +561,223 @@
                 <div><strong>STOCK PROFILE:</strong> RAW COTTON</div>
               </div>
             </div>
-
-            <button onclick="closeZine()" class="w-full py-2.5 bg-riso-carbon text-white font-mono text-xs uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:bg-riso-pink transition-colors">
-              [ RETURN TO DESK ]
-            </button>
-          </div> <!-- End Panel 3 -->
-
-        </div> <!-- End Panel 2 -->
-
-      </div> <!-- End Panel 1 -->
-
+            <div class="flex flex-col gap-2 mt-4">
+              <button id="zine-project-btn" onclick="goToCurrentProject()" class="interactive-btn w-full py-2 bg-riso-teal text-riso-carbon font-mono text-xs uppercase font-bold tracking-widest border-2 border-black shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:bg-riso-pink hover:text-white transition-colors">[GO-TO PROJECT ↗]</button>
+              <button onclick="closeZine()" class="w-full py-2 bg-riso-carbon text-white font-mono text-xs uppercase tracking-widest border-2 border-black hover:bg-riso-pink transition-colors">[CLOSE STENCIL]</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- CORE LOGIC & ANIMATION SYSTEMS -->
   <script>
-    // System Configurations
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'mag-riso-system';
-    
-    // Global App States
     let currentActiveScreen = 'desk';
     let globalAudioEnabled = false;
+    let currentlyOpenZineKey = null;
 
-    // -------------------------------------------------------------
-    // WEBAUDIO PRO-AUDIO SYNTHESIS SYSTEM (Tactile Friction Mapping)
-    // -------------------------------------------------------------
-    let audioCtx = null;
-    let noiseSource = null;
-    let bandpassFilter = null;
-    let audioGain = null;
-    let stampOscillator = null;
-
+    // AUDIO
+    let audioCtx = null, noiseSource = null, bandpassFilter = null, audioGain = null;
     function initAudio() {
       if (audioCtx) return;
-
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       audioCtx = new AudioContextClass();
-
-      // Create raw unbleached white noise buffer source
       const bufferSize = 2 * audioCtx.sampleRate;
       const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
       const outputChannel = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        outputChannel[i] = Math.random() * 2 - 1;
-      }
-
+      for (let i = 0; i < bufferSize; i++) outputChannel[i] = Math.random() * 2 - 1;
       noiseSource = audioCtx.createBufferSource();
       noiseSource.buffer = noiseBuffer;
       noiseSource.loop = true;
-
-      // Filter noise to resemble organic dry paper scratching textures
       bandpassFilter = audioCtx.createBiquadFilter();
       bandpassFilter.type = 'bandpass';
       bandpassFilter.frequency.value = 450;
       bandpassFilter.Q.value = 2.0;
-
-      // Set output gain limits
       audioGain = audioCtx.createGain();
       audioGain.gain.setValueAtTime(0, audioCtx.currentTime);
-
       noiseSource.connect(bandpassFilter);
       bandpassFilter.connect(audioGain);
       audioGain.connect(audioCtx.destination);
-
       noiseSource.start();
-
       const telemetry = document.getElementById('audio-telemetry');
-      if (telemetry) {
-        telemetry.innerText = "PRO-AUDIO: SYNTHESIZER ONLINE";
-        telemetry.classList.add('text-riso-teal');
-      }
+      if (telemetry) { telemetry.innerText = "PRO-AUDIO: SYNTHESIZER ONLINE"; telemetry.classList.add('text-riso-teal'); }
     }
-
     function modulateFrictionSound(intensity) {
       if (!audioCtx || !audioGain || !bandpassFilter || !globalAudioEnabled) return;
-
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-
-      // Map drag speeds to physical friction amplitudes
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       const volumeScale = Math.min(intensity * 0.05, 0.25);
       const sweepFrequency = 350 + (intensity * 40);
-
       audioGain.gain.setTargetAtTime(volumeScale, audioCtx.currentTime, 0.05);
       bandpassFilter.frequency.setTargetAtTime(sweepFrequency, audioCtx.currentTime, 0.05);
     }
-
     function playStampChime() {
       if (!audioCtx || !globalAudioEnabled) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
-
-      // Generate physical ink stamp clamping chime transient
       const osc = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
-
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(140, audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(380, audioCtx.currentTime + 0.35);
-
       gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + 0.35);
-
       osc.connect(gainNode);
       gainNode.connect(audioCtx.destination);
-
       osc.start();
       osc.stop(audioCtx.currentTime + 0.35);
     }
-
     function toggleGlobalAudio() {
-      // First boot initializer
-      if (!audioCtx) {
-        initAudio();
-      }
-      
+      if (!audioCtx) initAudio();
       globalAudioEnabled = !globalAudioEnabled;
       const btn = document.getElementById('audio-hud-btn');
       const telemetry = document.getElementById('audio-telemetry');
-
       if (globalAudioEnabled) {
-        btn.classList.remove('bg-riso-yellow');
-        btn.classList.add('bg-riso-pink', 'text-white');
+        btn.classList.remove('bg-riso-yellow'); btn.classList.add('bg-riso-pink', 'text-white');
         if (telemetry) telemetry.innerText = "PRO-AUDIO: MASTER SYNTHESIS ACTIVE";
         playStampChime();
       } else {
-        btn.classList.add('bg-riso-yellow');
-        btn.classList.remove('bg-riso-pink', 'text-white');
+        btn.classList.add('bg-riso-yellow'); btn.classList.remove('bg-riso-pink', 'text-white');
         if (audioGain) audioGain.gain.setValueAtTime(0, audioCtx.currentTime);
         if (telemetry) telemetry.innerText = "PRO-AUDIO: MUTED (STANDBY)";
       }
     }
+    window.addEventListener('click', () => { if (!audioCtx) initAudio(); }, { once: true });
 
-    // Connect user click to safely boot the audio graph contexts
-    window.addEventListener('click', () => {
-      if (!audioCtx) {
-        initAudio();
-      }
-    }, { once: true });
-
-
-    // -------------------------------------------------------------
-    // ALCHEMIC CANVAS CURSOR INK TRAIL ENGINE
-    // -------------------------------------------------------------
+    // CURSOR TRAIL
     const trailCanvas = document.getElementById('cursor-trail-canvas');
     const trailCtx = trailCanvas?.getContext('2d');
-    let trailPoints = [];
-    let lastMousePos = { x: 0, y: 0 };
-    let mouseVelocity = 0;
-
-    function resizeTrailCanvas() {
-      if (trailCanvas) {
-        trailCanvas.width = window.innerWidth;
-        trailCanvas.height = window.innerHeight;
-      }
-    }
-    window.addEventListener('resize', resizeTrailCanvas);
-    resizeTrailCanvas();
-
-    // Trace coordinate updates
+    let trailPoints = [], lastMousePos = { x: 0, y: 0 }, mouseVelocity = 0;
+    function resizeTrailCanvas() { if (trailCanvas) { trailCanvas.width = window.innerWidth; trailCanvas.height = window.innerHeight; } }
+    window.addEventListener('resize', resizeTrailCanvas); resizeTrailCanvas();
     window.addEventListener('mousemove', (e) => {
-      const dx = e.clientX - lastMousePos.x;
-      const dy = e.clientY - lastMousePos.y;
-      mouseVelocity = Math.sqrt(dx*dx + dy*dy);
-
-      // Add fresh tracking coordinates
-      trailPoints.push({
-        x: e.clientX,
-        y: e.clientY,
-        size: Math.min(mouseVelocity * 0.8 + 6, 40),
-        color: Math.random() > 0.5 ? '#FF4B5C' : '#00D2D3', // Alternating Pink/Teal
-        alpha: 0.8,
-        decay: 0.035
-      });
-
-      // Keep arrays within safety limit
+      const dx = e.clientX - lastMousePos.x, dy = e.clientY - lastMousePos.y;
+      mouseVelocity = Math.sqrt(dx * dx + dy * dy);
+      trailPoints.push({ x: e.clientX, y: e.clientY, size: Math.min(mouseVelocity * 0.8 + 6, 40), color: Math.random() > 0.5 ? '#FF4B5C' : '#00D2D3', alpha: 0.8, decay: 0.035 });
       if (trailPoints.length > 60) trailPoints.shift();
       lastMousePos = { x: e.clientX, y: e.clientY };
-
-      // Sound mapping for continuous cursor drift
-      if (mouseVelocity > 2) {
-        modulateFrictionSound(mouseVelocity * 0.35);
-      }
+      if (mouseVelocity > 2) modulateFrictionSound(mouseVelocity * 0.35);
     });
-
-    // Touch screen gesture trail interface
     window.addEventListener('touchmove', (e) => {
       if (e.touches.length > 0) {
         const touch = e.touches[0];
-        const dx = touch.clientX - lastMousePos.x;
-        const dy = touch.clientY - lastMousePos.y;
-        mouseVelocity = Math.sqrt(dx*dx + dy*dy);
-
-        trailPoints.push({
-          x: touch.clientX,
-          y: touch.clientY,
-          size: Math.min(mouseVelocity * 1.0 + 8, 45),
-          color: Math.random() > 0.5 ? '#FF4B5C' : '#00D2D3',
-          alpha: 0.9,
-          decay: 0.04
-        });
-
+        const dx = touch.clientX - lastMousePos.x, dy = touch.clientY - lastMousePos.y;
+        mouseVelocity = Math.sqrt(dx * dx + dy * dy);
+        trailPoints.push({ x: touch.clientX, y: touch.clientY, size: Math.min(mouseVelocity * 1.0 + 8, 45), color: Math.random() > 0.5 ? '#FF4B5C' : '#00D2D3', alpha: 0.9, decay: 0.04 });
         lastMousePos = { x: touch.clientX, y: touch.clientY };
         modulateFrictionSound(mouseVelocity * 0.4);
       }
     });
-
-    // Permanent cursor drawer tick loop
     function drawCursorTrail() {
       if (!trailCtx || !trailCanvas) return;
       trailCtx.clearRect(0, 0, trailCanvas.width, trailCanvas.height);
-
-      // Render custom alchemic letterpress targets
       for (let i = trailPoints.length - 1; i >= 0; i--) {
         const pt = trailPoints[i];
-        pt.alpha -= pt.decay;
-        pt.size *= 0.96;
-
-        if (pt.alpha <= 0 || pt.size < 0.5) {
-          trailPoints.splice(i, 1);
-          continue;
-        }
-
+        pt.alpha -= pt.decay; pt.size *= 0.96;
+        if (pt.alpha <= 0 || pt.size < 0.5) { trailPoints.splice(i, 1); continue; }
         trailCtx.save();
         trailCtx.globalAlpha = pt.alpha;
-        trailCtx.globalCompositeOperation = 'multiply'; // High-fidelity Riso overprint emulation
+        trailCtx.globalCompositeOperation = 'multiply';
         trailCtx.fillStyle = pt.color;
-        
-        trailCtx.beginPath();
-        trailCtx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
-        trailCtx.fill();
+        trailCtx.beginPath(); trailCtx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2); trailCtx.fill();
         trailCtx.restore();
       }
-
-      // Render structural cursor focus ring
       trailCtx.save();
-      trailCtx.strokeStyle = '#1A1A1A';
-      trailCtx.lineWidth = 2.5;
+      trailCtx.strokeStyle = '#1A1A1A'; trailCtx.lineWidth = 2.5;
+      trailCtx.beginPath(); trailCtx.arc(lastMousePos.x, lastMousePos.y, 8, 0, Math.PI * 2); trailCtx.stroke();
       trailCtx.beginPath();
-      // Draw crosshair ring targeting mouse coordinate vectors
-      trailCtx.arc(lastMousePos.x, lastMousePos.y, 8, 0, Math.PI * 2);
-      trailCtx.stroke();
-
-      // Crosshair vector lines
-      trailCtx.beginPath();
-      trailCtx.moveTo(lastMousePos.x - 14, lastMousePos.y);
-      trailCtx.lineTo(lastMousePos.x + 14, lastMousePos.y);
-      trailCtx.moveTo(lastMousePos.x, lastMousePos.y - 14);
-      trailCtx.lineTo(lastMousePos.x, lastMousePos.y + 14);
-      trailCtx.stroke();
+      trailCtx.moveTo(lastMousePos.x - 14, lastMousePos.y); trailCtx.lineTo(lastMousePos.x + 14, lastMousePos.y);
+      trailCtx.moveTo(lastMousePos.x, lastMousePos.y - 14); trailCtx.lineTo(lastMousePos.x, lastMousePos.y + 14); trailCtx.stroke();
       trailCtx.restore();
-
       requestAnimationFrame(drawCursorTrail);
     }
     drawCursorTrail();
 
-
-    // -------------------------------------------------------------
-    // INTERACTIVE REAL-TIME HALFTONE SIMULATOR (Screen 2 Live Engine)
-    // -------------------------------------------------------------
+    // HALFTONE LAB
     const labCanvas = document.getElementById('lab-processor-canvas');
     const labCtx = labCanvas?.getContext('2d');
     let labConfig = { dotSize: 6, frequency: 16, offset: 6, inkColor1: '#FF4B5C', inkColor2: '#00D2D3' };
-
     function renderLabHalftone() {
       if (!labCanvas || !labCtx || currentActiveScreen !== 'lab') return;
-
-      const w = labCanvas.width;
-      const h = labCanvas.height;
+      const w = labCanvas.width, h = labCanvas.height;
       labCtx.clearRect(0, 0, w, h);
-
-      // Fill unbleached baseline stock
-      labCtx.fillStyle = '#F4F1EA';
-      labCtx.fillRect(0, 0, w, h);
-
-      const density = labConfig.frequency;
-      const radiusMax = labConfig.dotSize;
-      const misalignment = labConfig.offset;
-
-      // Draw primary overprint master pattern (Cyan/Teal channel grid)
-      labCtx.save();
-      labCtx.fillStyle = labConfig.inkColor2;
-      labCtx.globalCompositeOperation = 'multiply';
-
+      labCtx.fillStyle = '#F4F1EA'; labCtx.fillRect(0, 0, w, h);
+      const density = labConfig.frequency, radiusMax = labConfig.dotSize, misalignment = labConfig.offset;
+      labCtx.save(); labCtx.fillStyle = labConfig.inkColor2; labCtx.globalCompositeOperation = 'multiply';
       for (let x = 0; x < w; x += density) {
         for (let y = 0; y < h; y += density) {
-          // Calculate procedural luminance (creates wave-like physical pattern overlays)
-          const distToCenter = Math.sqrt(Math.pow(x - w/2, 2) + Math.pow(y - h/2, 2));
+          const distToCenter = Math.sqrt(Math.pow(x - w / 2, 2) + Math.pow(y - h / 2, 2));
           const luminance = (Math.sin(distToCenter * 0.015 - (Date.now() * 0.002)) + 1.0) / 2.0;
           const radius = Math.max(0.2, luminance * radiusMax);
-
-          labCtx.beginPath();
-          // Apply horizontal misalignment factor directly to Cyan coordinates
-          labCtx.arc(x - misalignment, y - misalignment * 0.5, radius, 0, Math.PI * 2);
-          labCtx.fill();
+          labCtx.beginPath(); labCtx.arc(x - misalignment, y - misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
         }
       }
       labCtx.restore();
-
-      // Draw secondary overprint master pattern (Magenta/Pink channel grid)
-      labCtx.save();
-      labCtx.fillStyle = labConfig.inkColor1;
-      labCtx.globalCompositeOperation = 'multiply';
-
+      labCtx.save(); labCtx.fillStyle = labConfig.inkColor1; labCtx.globalCompositeOperation = 'multiply';
       for (let x = 0; x < w; x += density) {
         for (let y = 0; y < h; y += density) {
-          const distToCenter = Math.sqrt(Math.pow(x - w/2, 2) + Math.pow(y - h/2, 2));
+          const distToCenter = Math.sqrt(Math.pow(x - w / 2, 2) + Math.pow(y - h / 2, 2));
           const luminance = (Math.sin(distToCenter * 0.015 - (Date.now() * 0.002) + Math.PI) + 1.0) / 2.0;
           const radius = Math.max(0.2, luminance * radiusMax);
-
-          labCtx.beginPath();
-          // Offset Magenta drum coordinates in the inverse direction
-          labCtx.arc(x + misalignment, y + misalignment * 0.5, radius, 0, Math.PI * 2);
-          labCtx.fill();
+          labCtx.beginPath(); labCtx.arc(x + misalignment, y + misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
         }
       }
       labCtx.restore();
-
-      // Render beautiful microscopic paper grain details directly to raster output
-      labCtx.save();
-      labCtx.globalAlpha = 0.05;
-      labCtx.fillStyle = '#1A1A1A';
-      for (let i = 0; i < 3000; i++) {
-        const gx = Math.random() * w;
-        const gy = Math.random() * h;
-        labCtx.fillRect(gx, gy, 1, 1);
-      }
+      labCtx.save(); labCtx.globalAlpha = 0.05; labCtx.fillStyle = '#1A1A1A';
+      for (let i = 0; i < 3000; i++) labCtx.fillRect(Math.random() * w, Math.random() * h, 1, 1);
       labCtx.restore();
     }
-
-    // Watch screen 2 range elements
     const sliderLabDot = document.getElementById('slider-lab-dot');
     const sliderLabFreq = document.getElementById('slider-lab-freq');
     const sliderLabOffset = document.getElementById('slider-lab-offset');
-
     const valLabDot = document.getElementById('val-lab-dot');
     const valLabFreq = document.getElementById('val-lab-freq');
     const valLabOffset = document.getElementById('val-lab-offset');
-
     function syncLabControllers() {
       if (!sliderLabDot || !sliderLabFreq || !sliderLabOffset) return;
-
       labConfig.dotSize = parseFloat(sliderLabDot.value);
       labConfig.frequency = parseInt(sliderLabFreq.value);
       labConfig.offset = parseInt(sliderLabOffset.value);
-
-      valLabDot.innerText = `${labConfig.dotSize.toFixed(1)}px`;
-      valLabFreq.innerText = `${labConfig.frequency}px`;
-      valLabOffset.innerText = `${labConfig.offset}px`;
-
+      valLabDot.innerText = labConfig.dotSize.toFixed(1) + 'px';
+      valLabFreq.innerText = labConfig.frequency + 'px';
+      valLabOffset.innerText = labConfig.offset + 'px';
       renderLabHalftone();
     }
-
     if (sliderLabDot) {
       sliderLabDot.addEventListener('input', syncLabControllers);
       sliderLabFreq.addEventListener('input', syncLabControllers);
       sliderLabOffset.addEventListener('input', syncLabControllers);
     }
-
     function changeInksLab(c1, c2, label) {
-      labConfig.inkColor1 = c1;
-      labConfig.inkColor2 = c2;
-
-      // Update button selection borders
-      document.querySelectorAll('.lab-ink-btn').forEach((btn) => {
-        if (btn.innerText === label) {
-          btn.classList.add('bg-riso-carbon', 'text-white');
-        } else {
-          btn.classList.remove('bg-riso-carbon', 'text-white');
-        }
+      labConfig.inkColor1 = c1; labConfig.inkColor2 = c2;
+      document.querySelectorAll('.lab-ink-btn').forEach(btn => {
+        if (btn.innerText === label) { btn.classList.add('bg-riso-carbon', 'text-white'); }
+        else { btn.classList.remove('bg-riso-carbon', 'text-white'); }
       });
-
-      playStampChime();
-      renderLabHalftone();
+      playStampChime(); renderLabHalftone();
     }
 
-
-    // -------------------------------------------------------------
-    // KINETIC LETTERS COMPRESSION SYSTEM (MP-02 Specification)
-    // -------------------------------------------------------------
+    // KINETIC TYPE
     const morphingHeader = document.getElementById('dynamic-morphing-type');
-    let morphVelocity = 0;
-    let lastMorphTime = Date.now();
-    let prevMouseX = 0, prevMouseY = 0;
-
+    let morphVelocity = 0, lastMorphTime = Date.now(), prevMouseX = 0, prevMouseY = 0;
     if (morphingHeader) {
       window.addEventListener('mousemove', (e) => {
-        const now = Date.now();
-        const dt = now - lastMorphTime;
+        const now = Date.now(), dt = now - lastMorphTime;
         if (dt === 0) return;
-
-        const dx = e.clientX - prevMouseX;
-        const dy = e.clientY - prevMouseY;
-        const velocity = Math.sqrt(dx*dx + dy*dy) / dt; // pixels per millisecond
-
+        const dx = e.clientX - prevMouseX, dy = e.clientY - prevMouseY;
+        const velocity = Math.sqrt(dx * dx + dy * dy) / dt;
         morphVelocity = gsap.utils.interpolate(morphVelocity, velocity, 0.12);
         const cappedFactor = Math.min(morphVelocity * 15, 30);
-
-        // Adjust letter spacing, font metrics, skew transform, and overprint shadows on acceleration
-        gsap.to(morphingHeader, {
-          letterSpacing: `${cappedFactor * 0.5}px`,
-          scaleX: 1.0 + (cappedFactor * 0.015),
-          skewX: cappedFactor * 0.8,
-          duration: 0.1,
-          overwrite: 'auto'
-        });
-
-        // Split chromatic shadow depths dynamically
-        morphingHeader.style.setProperty('--x-shift', `${cappedFactor * 1.2}px`);
-        morphingHeader.style.setProperty('--y-shift', `${cappedFactor * 0.5}px`);
+        gsap.to(morphingHeader, { letterSpacing: cappedFactor * 0.5 + 'px', scaleX: 1.0 + (cappedFactor * 0.015), skewX: cappedFactor * 0.8, duration: 0.1, overwrite: 'auto' });
+        morphingHeader.style.setProperty('--x-shift', cappedFactor * 1.2 + 'px');
+        morphingHeader.style.setProperty('--y-shift', cappedFactor * 0.5 + 'px');
         morphingHeader.classList.add('chromatic-active');
-
-        prevMouseX = e.clientX;
-        prevMouseY = e.clientY;
-        lastMorphTime = now;
+        prevMouseX = e.clientX; prevMouseY = e.clientY; lastMorphTime = now;
       });
-
-      // Snap back smoothly when the pointer halts
       setInterval(() => {
         if (morphVelocity > 0.05) {
           morphVelocity *= 0.85;
           if (morphVelocity <= 0.05) {
-            gsap.to(morphingHeader, {
-              letterSpacing: '0px',
-              scaleX: 1.0,
-              skewX: 0,
-              duration: 0.4
-            });
+            gsap.to(morphingHeader, { letterSpacing: '0px', scaleX: 1.0, skewX: 0, duration: 0.4 });
             morphingHeader.style.setProperty('--x-shift', '0px');
             morphingHeader.style.setProperty('--y-shift', '0px');
             morphingHeader.classList.remove('chromatic-active');
@@ -1042,16 +786,10 @@
       }, 50);
     }
 
-
-    // -------------------------------------------------------------
-    // HERO BLEED HEADERS SYSTEM (DESK)
-    // -------------------------------------------------------------
+    // HERO BLEED
     const heroHeader = document.getElementById('hero-bleed-text');
     const bleedMap = document.getElementById('bleedMap');
-    let heroPos = { x: 0, y: 0 };
-    let lastHeroPos = { x: 0, y: 0 };
-    let heroVel = 0;
-
+    let heroPos = { x: 0, y: 0 }, lastHeroPos = { x: 0, y: 0 }, heroVel = 0;
     if (heroHeader && bleedMap) {
       const handleMove = (e) => {
         const rect = heroHeader.getBoundingClientRect();
@@ -1059,361 +797,209 @@
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         heroPos = { x: clientX - rect.left, y: clientY - rect.top };
       };
-
       const handleEnter = () => {
-        initAudio();
-        gsap.ticker.add(updateHeroWarp);
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('touchmove', handleMove);
+        initAudio(); gsap.ticker.add(updateHeroWarp);
+        window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove);
       };
-
       const handleLeave = () => {
         gsap.ticker.remove(updateHeroWarp);
-        window.removeEventListener('mousemove', handleMove);
-        window.removeEventListener('touchmove', handleMove);
-
+        window.removeEventListener('mousemove', handleMove); window.removeEventListener('touchmove', handleMove);
         if (audioGain) audioGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.15);
         gsap.to(bleedMap, { attr: { scale: 0 }, duration: 0.5, ease: 'power2.out' });
-        heroHeader.style.setProperty('--x-shift', '0px');
-        heroHeader.style.setProperty('--y-shift', '0px');
-        heroHeader.classList.remove('chromatic-active');
-        heroVel = 0;
+        heroHeader.style.setProperty('--x-shift', '0px'); heroHeader.style.setProperty('--y-shift', '0px');
+        heroHeader.classList.remove('chromatic-active'); heroVel = 0;
       };
-
       const updateHeroWarp = () => {
-        const dx = heroPos.x - lastHeroPos.x;
-        const dy = heroPos.y - lastHeroPos.y;
-        const speed = Math.sqrt(dx*dx + dy*dy);
-
+        const dx = heroPos.x - lastHeroPos.x, dy = heroPos.y - lastHeroPos.y;
+        const speed = Math.sqrt(dx * dx + dy * dy);
         heroVel = gsap.utils.interpolate(heroVel, speed, 0.1);
         const capped = Math.min(heroVel, 25);
-
         bleedMap.setAttribute('scale', (capped * 2.2).toString());
-        heroHeader.style.setProperty('--x-shift', `${capped * 1.1}px`);
-        heroHeader.style.setProperty('--y-shift', `${capped * 0.4}px`);
+        heroHeader.style.setProperty('--x-shift', capped * 1.1 + 'px');
+        heroHeader.style.setProperty('--y-shift', capped * 0.4 + 'px');
         heroHeader.classList.add('chromatic-active');
-
         modulateFrictionSound(capped * 0.9);
-
-        // Spawn dynamic ink drips inside page headers on rapid swiping gestures
         if (speed > 35 && Math.random() > 0.88) {
           const drip = document.createElement('div');
           drip.className = 'absolute bg-riso-pink rounded-full pointer-events-none overprint-multiply z-[1]';
           const size = gsap.utils.random(5, 14);
-          drip.style.width = `${size}px`;
-          drip.style.height = `${size}px`;
-          drip.style.left = `${heroPos.x}px`;
-          drip.style.top = `${heroPos.y}px`;
+          drip.style.width = size + 'px'; drip.style.height = size + 'px';
+          drip.style.left = heroPos.x + 'px'; drip.style.top = heroPos.y + 'px';
           heroHeader.appendChild(drip);
-
-          gsap.to(drip, {
-            y: `+=${gsap.utils.random(60, 160)}`,
-            scaleX: 0.45,
-            scaleY: 1.9,
-            opacity: 0,
-            duration: gsap.utils.random(1.2, 2.0),
-            ease: 'power1.in',
-            onComplete: () => drip.remove()
-          });
+          gsap.to(drip, { y: '+=' + gsap.utils.random(60, 160), scaleX: 0.45, scaleY: 1.9, opacity: 0, duration: gsap.utils.random(1.2, 2.0), ease: 'power1.in', onComplete: () => drip.remove() });
         }
-
         lastHeroPos = { ...heroPos };
       };
-
-      heroHeader.addEventListener('mouseenter', handleEnter);
-      heroHeader.addEventListener('mouseleave', handleLeave);
-      heroHeader.addEventListener('touchstart', handleEnter);
-      heroHeader.addEventListener('touchend', handleLeave);
+      heroHeader.addEventListener('mouseenter', handleEnter); heroHeader.addEventListener('mouseleave', handleLeave);
+      heroHeader.addEventListener('touchstart', handleEnter); heroHeader.addEventListener('touchend', handleLeave);
     }
 
-
-    // -------------------------------------------------------------
-    // MATTER.JS DESK PHYSICS CORE ENGINE (PR-01/PR-02)
-    // -------------------------------------------------------------
+    // MATTER.JS PHYSICS DESK
     let engine, world, runner;
     const cardsMapping = [];
-
     function initPhysicsDesk() {
       const container = document.getElementById('physics-container');
       const scene = document.getElementById('physics-scene');
       if (!container || !scene) return;
-
       const { Engine, World, Bodies, Mouse, MouseConstraint, Events, Body } = Matter;
-
       engine = Engine.create();
-      engine.gravity.y = 0.35; // Slight physical downward gravity pull
-
+      engine.gravity.y = 0.35;
       const width = container.clientWidth || 800;
       const height = container.clientHeight || 650;
+      const boundaryThickness = 300;
       const boundaryOptions = { isStatic: true, render: { visible: false } };
-
-      // Solid edge constraints
-      const ground = Bodies.rectangle(width / 2, height + 30, Math.max(width, 100), 60, boundaryOptions);
-      const leftWall = Bodies.rectangle(-30, height / 2, 60, Math.max(height, 100), boundaryOptions);
-      const rightWall = Bodies.rectangle(width + 30, height / 2, 60, Math.max(height, 100), boundaryOptions);
-      const ceiling = Bodies.rectangle(width / 2, -30, Math.max(width, 100), 60, boundaryOptions);
-
+      const ground = Bodies.rectangle(width / 2, height + boundaryThickness / 2, width + 1000, boundaryThickness, boundaryOptions);
+      const leftWall = Bodies.rectangle(-boundaryThickness / 2, height / 2, boundaryThickness, height + 1000, boundaryOptions);
+      const rightWall = Bodies.rectangle(width + boundaryThickness / 2, height / 2, boundaryThickness, height + 1000, boundaryOptions);
+      const ceiling = Bodies.rectangle(width / 2, -boundaryThickness / 2, width + 1000, boundaryThickness, boundaryOptions);
       World.add(engine.world, [ground, leftWall, rightWall, ceiling]);
 
-      // Map portfolio nodes
       const htmlCards = Array.from(scene.querySelectorAll('.physics-card'));
       htmlCards.forEach((el, index) => {
         const rect = el.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
-
         const cardWidth = rect.width > 0 ? rect.width : (el.offsetWidth || 200);
         const cardHeight = rect.height > 0 ? rect.height : (el.offsetHeight || 150);
-        
-        const finalWidth = Math.max(cardWidth, 20);
-        const finalHeight = Math.max(cardHeight, 20);
-
-        const x = (rect.left - containerRect.left) + finalWidth / 2;
-        const y = (rect.top - containerRect.top) + finalHeight / 2;
-
+        const finalWidth = Math.max(cardWidth, 40);
+        const finalHeight = Math.max(cardHeight, 40);
+        const offsetGap = width / (htmlCards.length + 1);
+        const x = offsetGap * (index + 1);
+        const y = height / 2 - (Math.random() * 100);
         const weight = el.getAttribute('data-weight') || 'cardboard';
-        let density = 0.005;
-        let frictionAir = 0.05;
-        let restitution = 0.3;
-
-        if (weight === 'paper-light') {
-          density = 0.001;
-          frictionAir = 0.08;
-          restitution = 0.1;
-        } else if (weight === 'sticker') {
-          density = 0.002;
-          frictionAir = 0.12;
-          restitution = 0.05;
-        }
-
-        const body = Bodies.rectangle(x, y, finalWidth, finalHeight, {
-          restitution: restitution,
-          frictionAir: frictionAir,
-          density: density,
-          friction: 0.15
-        });
-
+        let density = 0.005, frictionAir = 0.05, restitution = 0.3;
+        if (weight === 'paper-light') { density = 0.001; frictionAir = 0.08; restitution = 0.1; }
+        else if (weight === 'sticker') { density = 0.002; frictionAir = 0.12; restitution = 0.05; }
+        const body = Bodies.rectangle(x, y, finalWidth, finalHeight, { restitution, frictionAir, density, friction: 0.15 });
         body.domElement = el;
         Body.setAngle(body, (Math.random() - 0.5) * 0.25);
-
         World.add(engine.world, body);
         cardsMapping.push(body);
       });
 
-      // Mouse/Touch Drag controls
       const mouse = Mouse.create(container);
-      const mouseConstraint = MouseConstraint.create(engine, {
-        mouse: mouse,
-        constraint: { stiffness: 0.1, render: { visible: false } }
-      });
-
+      const mouseConstraint = MouseConstraint.create(engine, { mouse, constraint: { stiffness: 0.15, render: { visible: false } } });
       World.add(engine.world, mouseConstraint);
-
-      // Mobile touch scroll lock prevention
       mouseConstraint.mouse.element.removeEventListener("mousewheel", mouseConstraint.mouse.mousewheel);
       mouseConstraint.mouse.element.removeEventListener("DOMMouseScroll", mouseConstraint.mouse.mousewheel);
 
-      // Track clicks versus drags safely
-      let dragStartPos = { x: 0, y: 0 };
-      Events.on(mouseConstraint, 'mousedown', (event) => {
-        dragStartPos = { ...event.mouse.position };
-        initAudio();
-      });
-
+      let dragStartPos = { x: 0, y: 0 }, dragStartTime = 0;
+      Events.on(mouseConstraint, 'mousedown', (event) => { dragStartPos = { ...event.mouse.position }; dragStartTime = Date.now(); initAudio(); });
       Events.on(mouseConstraint, 'dragend', (event) => {
         const endPos = event.mouse.position;
-        const distance = Math.sqrt(Math.pow(endPos.x - dragStartPos.x, 2) + Math.pow(endPos.y - dragStartPos.y, 2));
-        
-        if (distance < 5 && event.source.body) {
+        const dist = Math.sqrt(Math.pow(endPos.x - dragStartPos.x, 2) + Math.pow(endPos.y - dragStartPos.y, 2));
+        const dt = Date.now() - dragStartTime;
+        if (dist < 8 && dt < 450 && event.source.body) {
           const dom = event.source.body.domElement;
           if (dom) {
-            const btn = dom.querySelector('button');
+            const btn = dom.querySelector('.interactive-btn');
             if (btn) btn.click();
           }
         }
       });
 
-      // Live Synchronizer Ticker Loop
       Events.on(engine, 'afterUpdate', () => {
         cardsMapping.forEach((body) => {
           const el = body.domElement;
           if (!el) return;
-
           const { x, y } = body.position;
           const angle = body.angle;
-
-          const halfWidth = el.offsetWidth / 2;
-          const halfHeight = el.offsetHeight / 2;
-
+          const halfWidth = el.offsetWidth / 2, halfHeight = el.offsetHeight / 2;
           el.style.transform = `translate3d(${x - halfWidth}px, ${y - halfHeight}px, 0px) rotate(${angle}rad)`;
-
-          // Velocity speed styling (Chromatic alignment offsets mapped directly to velocity vectors)
           if (body.speed > 1.2) {
             modulateFrictionSound(body.speed * 2.2);
-            
             const colorSeparation = Math.min(body.speed * 1.4, 12);
-            el.style.setProperty('--x-shift', `${colorSeparation}px`);
-            el.style.setProperty('--y-shift', `${colorSeparation * 0.5}px`);
+            el.style.setProperty('--x-shift', colorSeparation + 'px');
+            el.style.setProperty('--y-shift', colorSeparation * 0.5 + 'px');
             el.classList.add('chromatic-active');
-          } else {
-            el.classList.remove('chromatic-active');
-          }
+          } else { el.classList.remove('chromatic-active'); }
         });
       });
-
       runner = Matter.Runner.create();
       Matter.Runner.run(runner, engine);
     }
-
     function shakeDesk() {
-      // Direct mechanical desk shake trigger
-      cardsMapping.forEach((body) => {
-        Matter.Body.applyForce(body, body.position, {
-          x: (Math.random() - 0.5) * 0.15,
-          y: -Math.random() * 0.22
-        });
-      });
+      cardsMapping.forEach((body) => { Matter.Body.applyForce(body, body.position, { x: (Math.random() - 0.5) * 0.1, y: -Math.random() * 0.15 }); });
       playStampChime();
     }
 
-
-    // -------------------------------------------------------------
-    // THE FORM CRUMPLE-AND-TOSS ENGINE
-    // -------------------------------------------------------------
+    // FORM CRUMPLE
     function handleCrumpleSubmit(e) {
-      e.preventDefault();
-      initAudio();
-
+      e.preventDefault(); initAudio();
       const container = document.getElementById('physics-container');
       const successOverlay = document.getElementById('form-success-overlay');
       const form = document.getElementById('contact-form');
       if (!container || !successOverlay || !form) return;
-
       successOverlay.classList.remove('pointer-events-none');
       gsap.to(successOverlay, { opacity: 1, duration: 0.3 });
-
-      // Generate a new crumpled paper sphere inside our Matter desk context
       const { Bodies, World, Body } = Matter;
       const width = container.clientWidth || 800;
-
       const newBall = document.createElement('div');
       newBall.className = 'physics-card pointer-events-auto absolute w-16 h-16 bg-riso-yellow border-4 border-black rounded-full flex items-center justify-center font-mono text-[9px] text-center select-none shadow-[4px_4px_0px_rgba(0,0,0,1)] z-10';
       newBall.innerHTML = '✉️<br/>FORM';
-
       document.getElementById('physics-scene').appendChild(newBall);
-
-      const ballBody = Bodies.circle(width / 2, 50, 32, {
-        restitution: 0.62,
-        frictionAir: 0.06,
-        density: 0.012
-      });
-
+      const ballBody = Bodies.circle(width / 2, 50, 32, { restitution: 0.62, frictionAir: 0.06, density: 0.012 });
       ballBody.domElement = newBall;
       World.add(engine.world, ballBody);
       cardsMapping.push(ballBody);
-
-      // Velocity toss
       Body.setVelocity(ballBody, { x: gsap.utils.random(-6, 6), y: 4 });
       playStampChime();
     }
-
     function resetContactForm() {
       const successOverlay = document.getElementById('form-success-overlay');
       const form = document.getElementById('contact-form');
       if (successOverlay && form) {
-        gsap.to(successOverlay, {
-          opacity: 0,
-          duration: 0.3,
-          onComplete: () => {
-            successOverlay.classList.add('pointer-events-none');
-            form.reset();
-          }
-        });
+        gsap.to(successOverlay, { opacity: 0, duration: 0.3, onComplete: () => { successOverlay.classList.add('pointer-events-none'); form.reset(); } });
       }
     }
 
-
-    // -------------------------------------------------------------
-    // SPATIAL Blueprints INSPECTOR LENS (GL-04)
-    // -------------------------------------------------------------
+    // X-RAY
     const xrayContainer = document.getElementById('xray-container');
     const xrayGhostLayer = document.getElementById('xray-ghost-layer');
     const xrayLensCue = document.getElementById('xray-lens-cue');
-
     if (xrayContainer && xrayGhostLayer && xrayLensCue) {
       const handleLensMove = (e) => {
         const rect = xrayContainer.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-
+        const x = clientX - rect.left, y = clientY - rect.top;
         xrayGhostLayer.style.clipPath = `circle(90px at ${x}px ${y}px)`;
         xrayGhostLayer.style.webkitClipPath = `circle(90px at ${x}px ${y}px)`;
-
-        xrayLensCue.style.left = `${x}px`;
-        xrayLensCue.style.top = `${y}px`;
+        xrayLensCue.style.left = x + 'px'; xrayLensCue.style.top = y + 'px';
       };
-
-      xrayContainer.addEventListener('mouseenter', () => {
-        xrayLensCue.classList.remove('hidden');
-      });
-
-      xrayContainer.addEventListener('mouseleave', () => {
-        xrayLensCue.classList.add('hidden');
-        xrayGhostLayer.style.clipPath = 'circle(0px at 0px 0px)';
-        xrayGhostLayer.style.webkitClipPath = 'circle(0px at 0px 0px)';
-      });
-
+      xrayContainer.addEventListener('mouseenter', () => xrayLensCue.classList.remove('hidden'));
+      xrayContainer.addEventListener('mouseleave', () => { xrayLensCue.classList.add('hidden'); xrayGhostLayer.style.clipPath = 'circle(0px at 0px 0px)'; xrayGhostLayer.style.webkitClipPath = 'circle(0px at 0px 0px)'; });
       xrayContainer.addEventListener('mousemove', handleLensMove);
       xrayContainer.addEventListener('touchmove', handleLensMove);
     }
 
-
-    // -------------------------------------------------------------
-    // REUSABLE 3D CONCERTINA ZINE MODAL MOVEMENT (MP-01)
-    // -------------------------------------------------------------
+    // ZINE MODAL
     const zineModal = document.getElementById('zine-modal');
     const panel1 = document.getElementById('panel-1');
     const panel2 = document.getElementById('panel-2');
     const panel3 = document.getElementById('panel-3');
     const shadow1 = document.getElementById('crease-shadow-1');
     const shadow2 = document.getElementById('crease-shadow-2');
-
     const projectData = {
-      yuki: {
-        title: "YUKI MORI",
-        category: "⚡ SPOTLIGHT // INC-09",
-        description: "An interactive, dynamic digital gallery exploring translucent color overlay and halftone alignment vectors.",
-        body: "Using high-refresh-rate canvas rendering loops, Yuki establishes deep overprint textures that recreate tactile paper-grain friction in modern web displays."
-      },
-      stencil: {
-        title: "STENCIL DRUM REEL",
-        category: "⚡ RECENT PRODUCTION WORKS",
-        description: "Continuous rotary stencil mechanics rendered dynamically on mobile-first front-end architectures.",
-        body: "A robust 2D color processor separates raw assets directly inside local GPU cache pipelines, resulting in zero-latency vector displacement morphs."
-      }
+      yuki: { title: "YUKI MORI", category: "⚡ SPOTLIGHT // INC-09", description: "An interactive digital gallery exploring translucent color overlay and halftone alignment vectors.", body: "Using high-refresh-rate canvas rendering loops, Yuki establishes deep overprint textures that recreate tactile paper-grain friction in modern web displays." },
+      stencil: { title: "STENCIL DRUM REEL", category: "⚡ RECENT PRODUCTION WORKS", description: "Continuous rotary stencil mechanics rendered dynamically on mobile-first front-end architectures.", body: "A robust 2D color processor separates raw assets directly inside local GPU cache pipelines, resulting in zero-latency vector displacement morphs." },
+      xray: { title: "X-RAY BLUEPRINTS", category: "⚡ SYSTEM TOOLS // GL-04", description: "A draggable inspection lens utilizing advanced CSS clipping masks to expose underlying asset architecture.", body: "This specialized interface component translates visual formulas on the fly. It bypasses rendering latency by using hardware-accelerated clipping filters." },
+      bleed: { title: "INK BLEED ANALYSIS", category: "⚡ COLOR STATUS SHEET", description: "A live typographic diagnostic model mapping fluid vector expansion parameters onto digital screens.", body: "Our custom SVG turbulence filter mimics wet ink soaking into cotton fibers, with real-time variables updating based on instantaneous cursor velocities." }
     };
-
     function openZine(key) {
+      currentlyOpenZineKey = key;
       const data = projectData[key];
       if (!data || !zineModal) return;
-
       document.getElementById('zine-title').innerText = data.title;
       document.getElementById('zine-category').innerText = data.category;
       document.getElementById('zine-description').innerText = data.description;
       document.getElementById('zine-body').innerText = data.body;
-
-      if (engine) engine.timing.timeScale = 0; // Freeze background physics to save performance
-
+      if (engine) engine.timing.timeScale = 0;
       gsap.set([panel1, panel2, panel3], { transformStyle: 'preserve-3d', backfaceVisibility: 'hidden' });
       gsap.set(panel1, { transformOrigin: 'left center' });
       gsap.set(panel2, { transformOrigin: 'right center' });
       gsap.set(panel3, { transformOrigin: 'left center' });
-
       zineModal.classList.remove('pointer-events-none');
       playStampChime();
-
       const tl = gsap.timeline({ defaults: { ease: 'power4.inOut', duration: 1.1 } });
       tl.to(zineModal, { opacity: 1, duration: 0.3 })
         .fromTo(panel1, { rotateY: -90, x: -100 }, { rotateY: 0, x: 0 }, '-=0.1')
@@ -1422,91 +1008,159 @@
         .fromTo(panel3, { rotateY: -175 }, { rotateY: 0 }, '-=0.9')
         .fromTo(shadow2, { opacity: 0.75 }, { opacity: 0 }, '-=0.9');
     }
-
     function closeZine() {
       if (!zineModal) return;
-
-      const tl = gsap.timeline({
-        defaults: { ease: 'power3.inOut', duration: 0.8 },
-        onComplete: () => {
-          zineModal.classList.add('pointer-events-none');
-          if (engine) engine.timing.timeScale = 1; // Unfreeze
-        }
-      });
-
-      tl.to(panel3, { rotateY: -175 })
-        .to(shadow2, { opacity: 0.75 }, 0)
-        .to(panel2, { rotateY: 175 }, '-=0.6')
-        .to(shadow1, { opacity: 0.75 }, '-=0.6')
+      const tl = gsap.timeline({ defaults: { ease: 'power3.inOut', duration: 0.8 }, onComplete: () => { zineModal.classList.add('pointer-events-none'); if (engine) engine.timing.timeScale = 1; currentlyOpenZineKey = null; } });
+      tl.to(panel3, { rotateY: -175 }).to(shadow2, { opacity: 0.75 }, 0)
+        .to(panel2, { rotateY: 175 }, '-=0.6').to(shadow1, { opacity: 0.75 }, '-=0.6')
         .to(panel1, { rotateY: -90, x: -100 }, '-=0.5')
         .to(zineModal, { opacity: 0, duration: 0.3 }, '-=0.2');
     }
+    function goToCurrentProject() {
+      if (!currentlyOpenZineKey) return;
+      const data = projectData[currentlyOpenZineKey];
+      document.getElementById('project-view-title').innerText = data.title;
+      document.getElementById('project-view-tag').innerText = data.category;
+      document.getElementById('project-view-body').innerText = data.description + ' ' + data.body;
+      const weightEl = document.getElementById('project-view-weight');
+      if (currentlyOpenZineKey === 'yuki') weightEl.innerText = "CARDBOARD (0.005)";
+      else if (currentlyOpenZineKey === 'stencil') weightEl.innerText = "PAPER-LIGHT (0.001)";
+      else weightEl.innerText = "STICKER (0.002)";
+      closeZine();
+      setTimeout(() => switchScreen('project-view'), 500);
+    }
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeZine(); });
 
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeZine();
-    });
-
-
-    // -------------------------------------------------------------
-    // IMMERSIVE PAGE SWIPER ROUTER SYSTEM
-    // -------------------------------------------------------------
+    // PAGE ROUTER
     function switchScreen(targetScreenId) {
       if (targetScreenId === currentActiveScreen) return;
-
-      const activeEl = document.getElementById(`screen-${currentActiveScreen}`);
-      const targetEl = document.getElementById(`screen-${targetScreenId}`);
+      const activeEl = document.getElementById('screen-' + currentActiveScreen);
+      const targetEl = document.getElementById('screen-' + targetScreenId);
       const swipeMask = document.getElementById('page-swipe-ink');
       if (!activeEl || !targetEl || !swipeMask) return;
-
       playStampChime();
-
-      // Trigger ink expansion transition overlay
       gsap.timeline()
-        .to(swipeMask, {
-          clipPath: 'circle(150% at 50% 50%)',
-          duration: 0.75,
-          ease: 'power3.in',
-          onComplete: () => {
-            // Swap visible structures
-            activeEl.classList.add('hidden-screen');
-            targetEl.classList.remove('hidden-screen');
-            
-            currentActiveScreen = targetScreenId;
-
-            // Trigger internal page recalculations if target screen is Canvas-heavy
-            if (targetScreenId === 'lab') {
-              // Ensure canvas buffer coordinates align to client container bounds
-              labCanvas.width = labCanvas.clientWidth || 500;
-              labCanvas.height = labCanvas.clientHeight || 360;
-              renderLabHalftone();
-            }
-
-            // Sync visual highlights on navigation tabs
-            document.querySelectorAll('.nav-tab-btn').forEach((btn) => {
-              if (btn.getAttribute('data-target') === targetScreenId) {
-                btn.classList.add('bg-riso-teal');
-                btn.classList.remove('bg-white');
-              } else {
-                btn.classList.add('bg-white');
-                btn.classList.remove('bg-riso-teal');
-              }
-            });
-          }
-        })
-        .to(swipeMask, {
-          clipPath: 'circle(0% at 50% 50%)',
-          duration: 0.65,
-          ease: 'power3.out'
-        });
+        .to(swipeMask, { clipPath: 'circle(150% at 50% 50%)', duration: 0.75, ease: 'power3.in', onComplete: () => {
+          activeEl.classList.add('hidden-screen');
+          targetEl.classList.remove('hidden-screen');
+          currentActiveScreen = targetScreenId;
+          if (targetScreenId === 'lab') { labCanvas.width = labCanvas.clientWidth || 500; labCanvas.height = labCanvas.clientHeight || 360; renderLabHalftone(); }
+          if (targetScreenId === 'separation') { resizeSeparationCanvas(); renderSeparation(); }
+          document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+            if (btn.getAttribute('data-target') === targetScreenId) { btn.classList.add('bg-riso-teal'); btn.classList.remove('bg-white'); }
+            else { btn.classList.add('bg-white'); btn.classList.remove('bg-riso-teal'); }
+          });
+        }})
+        .to(swipeMask, { clipPath: 'circle(0% at 50% 50%)', duration: 0.65, ease: 'power3.out' });
     }
 
+    // COLOR SEPARATION LAB
+    const sepCanvas = document.getElementById('separation-canvas');
+    const sepCtx = sepCanvas?.getContext('2d');
+    let sepChannels = { pink: true, teal: true, yellow: true, purple: true };
+    const sepColors = { pink: '#FF4B5C', teal: '#00D2D3', yellow: '#FECA57', purple: '#9B59B6' };
+    const sepOffsets = { pink: { x: 2, y: -1 }, teal: { x: -3, y: 2 }, yellow: { x: 1, y: 3 }, purple: { x: -1, y: -2 } };
+    function resizeSeparationCanvas() { if (sepCanvas) { sepCanvas.width = sepCanvas.clientWidth || 600; sepCanvas.height = sepCanvas.clientHeight || 450; } }
+    window.addEventListener('resize', resizeSeparationCanvas);
+    function renderSeparation() {
+      if (!sepCanvas || !sepCtx || currentActiveScreen !== 'separation') return;
+      const w = sepCanvas.width, h = sepCanvas.height;
+      sepCtx.clearRect(0, 0, w, h);
+      sepCtx.fillStyle = '#F4F1EA'; sepCtx.fillRect(0, 0, w, h);
+      // Draw a composite riso-style geometric composition
+      const channels = ['pink', 'teal', 'yellow', 'purple'];
+      channels.forEach(ch => {
+        if (!sepChannels[ch]) return;
+        sepCtx.save();
+        sepCtx.fillStyle = sepColors[ch];
+        sepCtx.globalCompositeOperation = 'multiply';
+        sepCtx.translate(sepOffsets[ch].x, sepOffsets[ch].y);
+        const time = Date.now() * 0.001;
+        // Large circle
+        sepCtx.beginPath();
+        sepCtx.arc(w * 0.35 + Math.sin(time + ch.charCodeAt(0)) * 30, h * 0.4 + Math.cos(time + ch.charCodeAt(0)) * 20, 120, 0, Math.PI * 2);
+        sepCtx.fill();
+        // Rectangle
+        sepCtx.fillRect(w * 0.55 + Math.cos(time * 0.7) * 20, h * 0.25 + Math.sin(time * 0.7) * 15, 140, 180);
+        // Small dots grid
+        for (let i = 0; i < 8; i++) {
+          for (let j = 0; j < 6; j++) {
+            sepCtx.beginPath();
+            sepCtx.arc(w * 0.15 + i * 55 + Math.sin(time + i) * 5, h * 0.6 + j * 45 + Math.cos(time + j) * 5, 12, 0, Math.PI * 2);
+            sepCtx.fill();
+          }
+        }
+        sepCtx.restore();
+      });
+      // Paper grain
+      sepCtx.save(); sepCtx.globalAlpha = 0.04; sepCtx.fillStyle = '#1A1A1A';
+      for (let i = 0; i < 2000; i++) sepCtx.fillRect(Math.random() * w, Math.random() * h, 1, 1);
+      sepCtx.restore();
+    }
+    function toggleChannel(ch) {
+      sepChannels[ch] = !sepChannels[ch];
+      const strip = document.getElementById('channel-' + ch);
+      const check = document.getElementById('check-' + ch);
+      if (sepChannels[ch]) { strip.classList.remove('off'); if (check) check.style.opacity = '1'; }
+      else { strip.classList.add('off'); if (check) check.style.opacity = '0.2'; }
+      playStampChime();
+      renderSeparation();
+    }
 
-    // -------------------------------------------------------------
-    // MAIN APP LAUNCH
-    // -------------------------------------------------------------
+    // PRINT QUEUE
+    const queueItems = [
+      { id: 'QP-092', title: 'MIDNIGHT FLUORESCENCE', colors: ['#FF4B5C', '#00D2D3'], layers: 4, status: 'COMPLETE', date: '2026-05-22' },
+      { id: 'QP-091', title: 'TEAL DECONSTRUCTION', colors: ['#00D2D3', '#1A1A1A'], layers: 3, status: 'COMPLETE', date: '2026-05-20' },
+      { id: 'QP-090', title: 'YELLOW DITHER NOISE', colors: ['#FECA57', '#FF4B5C'], layers: 5, status: 'DRYING', date: '2026-05-19' },
+      { id: 'QP-089', title: 'DUAL DRUM OVERPRINT', colors: ['#FF4B5C', '#00D2D3', '#FECA57'], layers: 6, status: 'COMPLETE', date: '2026-05-18' },
+      { id: 'QP-088', title: 'PURPLE FIBER BLEED', colors: ['#9B59B6', '#F4F1EA'], layers: 2, status: 'COMPLETE', date: '2026-05-15' },
+      { id: 'QP-087', title: 'CARBON BLACK STENCIL', colors: ['#1A1A1A', '#FECA57'], layers: 3, status: 'QUEUED', date: '2026-05-14' },
+    ];
+    function renderQueue() {
+      const feed = document.getElementById('queue-feed');
+      if (!feed) return;
+      feed.innerHTML = queueItems.map((item, i) => {
+        const statusColor = item.status === 'COMPLETE' ? 'bg-riso-teal' : item.status === 'DRYING' ? 'bg-riso-yellow' : 'bg-riso-pink';
+        return `
+        <div class="queue-card border-4 border-black bg-white p-6 shadow-[6px_6px_0px_rgba(0,0,0,1)] relative overflow-hidden" style="transform:rotate(${i % 2 === 0 ? -0.5 : 0.5}deg)">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 border-3 border-black flex items-center justify-center font-mono text-xs font-bold ${statusColor} text-white">
+                ${item.id.split('-')[1]}
+              </div>
+              <div>
+                <span class="font-mono text-[9px] uppercase text-riso-carbon/50">${item.id} // ${item.date}</span>
+                <h4 class="font-syne font-bold text-xl uppercase text-riso-carbon">${item.title}</h4>
+                <div class="flex items-center gap-2 mt-1">
+                  ${item.colors.map(c => `<div class="w-4 h-4 border-2 border-black" style="background:${c}"></div>`).join('')}
+                  <span class="font-mono text-[9px] text-riso-carbon/60">${item.layers} LAYERS</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-mono text-[10px] uppercase font-bold border-2 border-black px-3 py-1 ${statusColor} text-white">${item.status}</span>
+              <button onclick="switchScreen('lab')" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-white px-3 py-1 hover:bg-riso-pink hover:text-white transition-colors">[INSPECT]</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ANIMATION LOOP FOR CANVAS SCREENS
+    function globalCanvasLoop() {
+      if (currentActiveScreen === 'lab') renderLabHalftone();
+      if (currentActiveScreen === 'separation') renderSeparation();
+      requestAnimationFrame(globalCanvasLoop);
+    }
+    globalCanvasLoop();
+
+    // INIT
     window.onload = () => {
       lucide.createIcons();
       initPhysicsDesk();
+      resizeSeparationCanvas();
+      renderSeparation();
+      renderQueue();
     };
   </script>
 </body>
