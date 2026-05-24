@@ -95,6 +95,20 @@
       opacity: 0.08;
       filter: grayscale(1);
     }
+    .queue-detail {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+      opacity: 0;
+    }
+    .queue-detail.open {
+      max-height: 280px;
+      opacity: 1;
+    }
+    .layer-stack-bar {
+      height: 8px;
+      border: 2px solid black;
+    }
   </style>
 </head>
 <body class="relative min-h-screen">
@@ -354,8 +368,9 @@
         <div class="lg:col-span-8">
           <div class="relative w-full h-[450px] bg-riso-paper border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] overflow-hidden">
             <canvas id="separation-canvas" class="absolute inset-0 w-full h-full"></canvas>
-            <div class="absolute bottom-4 left-4 z-10">
+            <div class="absolute bottom-4 left-4 z-10 flex items-center gap-2">
               <span class="font-mono text-[10px] bg-white border-2 border-black px-2 py-1 font-bold uppercase">[LIVE COMPOSITE OUTPUT]</span>
+              <button onclick="exportSeparation()" class="font-mono text-[10px] bg-riso-carbon text-white border-2 border-black px-2 py-1 font-bold uppercase hover:bg-riso-pink transition-colors">[EXPORT PNG]</button>
             </div>
           </div>
         </div>
@@ -459,7 +474,7 @@
             <p class="font-sans text-sm text-riso-carbon/80 leading-relaxed">Our unique workflow implements a Headless CMS interface allowing instant overprint swaps and micro-particle modifications.</p>
             <div class="border-3 border-black border-dashed p-6 bg-riso-yellow/15 space-y-4">
               <h4 class="font-mono text-xs font-bold text-riso-carbon uppercase tracking-wider">// PIPELINE STATISTICS //</h4>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div id="project-view-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div class="border-2 border-black bg-white p-2"><div class="font-serif text-2xl font-black text-riso-pink">60</div><div class="font-mono text-[8px] uppercase">FPS TICK</div></div>
                 <div class="border-2 border-black bg-white p-2"><div class="font-serif text-2xl font-black text-riso-teal">2.8ms</div><div class="font-mono text-[8px] uppercase">LATENCY</div></div>
                 <div class="border-2 border-black bg-white p-2"><div class="font-serif text-2xl font-black text-riso-carbon">DUAL</div><div class="font-mono text-[8px] uppercase">DRUMS</div></div>
@@ -470,11 +485,12 @@
           <div class="md:col-span-4 space-y-6 bg-riso-paper border-3 border-black p-5 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
             <h4 class="font-syne font-bold text-sm uppercase text-riso-carbon border-b border-black pb-2">SPEC SHEET</h4>
             <div class="font-mono text-[11px] space-y-3">
-              <div><span class="text-riso-carbon/50 block">ROLL INKS:</span><span class="font-bold">FLUO PINK, TEAL</span></div>
+              <div><span class="text-riso-carbon/50 block">ROLL INKS:</span><span id="project-view-inks" class="font-bold">FLUO PINK, TEAL</span></div>
               <div><span class="text-riso-carbon/50 block">GRAVITY DRIVER:</span><span id="project-view-weight" class="font-bold">CARDBOARD (0.005)</span></div>
               <div><span class="text-riso-carbon/50 block">VECTOR CORES:</span><span class="font-bold">GSAP INTERPOLATION</span></div>
             </div>
-            <button onclick="toggleGlobalAudio()" class="w-full py-2 bg-riso-carbon text-white font-mono text-[10px] uppercase font-bold tracking-widest hover:bg-riso-teal transition-colors">GENERATE AUDIO SWEET ⚡</button>
+            <div id="project-view-tech" class="border-t border-black/10 pt-3 font-mono text-[10px] text-riso-carbon/70 leading-snug"></div>
+            <button onclick="toggleGlobalAudio()" class="w-full py-2 bg-riso-carbon text-white font-mono text-[10px] uppercase font-bold tracking-widest hover:bg-riso-teal transition-colors">GENERATE AUDIO SWEET</button>
           </div>
         </div>
       </div>
@@ -943,6 +959,17 @@
       cardsMapping.push(ballBody);
       Body.setVelocity(ballBody, { x: gsap.utils.random(-6, 6), y: 4 });
       playStampChime();
+      const formName = document.getElementById('form-name')?.value || 'UNKNOWN SHEET';
+      const nextIdNum = 93 + queueItems.length;
+      queueItems.unshift({
+        id: 'QP-' + String(nextIdNum).padStart(3, '0'),
+        title: formName.toUpperCase() + ' DISPATCH',
+        colors: ['#FF4B5C', '#FECA57'],
+        layers: 2,
+        status: 'QUEUED',
+        date: new Date().toISOString().slice(0, 10)
+      });
+      renderQueue();
     }
     function resetContactForm() {
       const successOverlay = document.getElementById('form-success-overlay');
@@ -980,10 +1007,66 @@
     const shadow1 = document.getElementById('crease-shadow-1');
     const shadow2 = document.getElementById('crease-shadow-2');
     const projectData = {
-      yuki: { title: "YUKI MORI", category: "⚡ SPOTLIGHT // INC-09", description: "An interactive digital gallery exploring translucent color overlay and halftone alignment vectors.", body: "Using high-refresh-rate canvas rendering loops, Yuki establishes deep overprint textures that recreate tactile paper-grain friction in modern web displays." },
-      stencil: { title: "STENCIL DRUM REEL", category: "⚡ RECENT PRODUCTION WORKS", description: "Continuous rotary stencil mechanics rendered dynamically on mobile-first front-end architectures.", body: "A robust 2D color processor separates raw assets directly inside local GPU cache pipelines, resulting in zero-latency vector displacement morphs." },
-      xray: { title: "X-RAY BLUEPRINTS", category: "⚡ SYSTEM TOOLS // GL-04", description: "A draggable inspection lens utilizing advanced CSS clipping masks to expose underlying asset architecture.", body: "This specialized interface component translates visual formulas on the fly. It bypasses rendering latency by using hardware-accelerated clipping filters." },
-      bleed: { title: "INK BLEED ANALYSIS", category: "⚡ COLOR STATUS SHEET", description: "A live typographic diagnostic model mapping fluid vector expansion parameters onto digital screens.", body: "Our custom SVG turbulence filter mimics wet ink soaking into cotton fibers, with real-time variables updating based on instantaneous cursor velocities." }
+      yuki: {
+        title: "YUKI MORI",
+        category: "⚡ SPOTLIGHT // INC-09",
+        description: "An interactive digital gallery exploring translucent color overlay and halftone alignment vectors.",
+        body: "Using high-refresh-rate canvas rendering loops, Yuki establishes deep overprint textures that recreate tactile paper-grain friction in modern web displays.",
+        inks: "FLUORESCENT PINK, AQUA TEAL",
+        weight: "CARDBOARD (0.005)",
+        stats: [
+          { val: "60", label: "FPS TICK", color: "text-riso-pink" },
+          { val: "1.2ms", label: "LATENCY", color: "text-riso-teal" },
+          { val: "DUAL", label: "DRUMS", color: "text-riso-carbon" },
+          { val: "99.8%", label: "TRANS", color: "text-riso-pink" }
+        ],
+        tech: "WebGL post-processing via Three.js. Custom displacement shaders mapped to cursor velocity vectors."
+      },
+      stencil: {
+        title: "STENCIL DRUM REEL",
+        category: "⚡ RECENT PRODUCTION WORKS",
+        description: "Continuous rotary stencil mechanics rendered dynamically on mobile-first front-end architectures.",
+        body: "A robust 2D color processor separates raw assets directly inside local GPU cache pipelines, resulting in zero-latency vector displacement morphs.",
+        inks: "BRIGHT YELLOW, CARBON BLACK",
+        weight: "PAPER-LIGHT (0.001)",
+        stats: [
+          { val: "120", label: "FPS TICK", color: "text-riso-yellow" },
+          { val: "0.8ms", label: "LATENCY", color: "text-riso-teal" },
+          { val: "TRIPLE", label: "DRUMS", color: "text-riso-carbon" },
+          { val: "100%", label: "TRANS", color: "text-riso-yellow" }
+        ],
+        tech: "Matter.js physics simulation coupled with GSAP timeline sequencing. Canvas 2D rasterization at 4x DPI."
+      },
+      xray: {
+        title: "X-RAY BLUEPRINTS",
+        category: "⚡ SYSTEM TOOLS // GL-04",
+        description: "A draggable inspection lens utilizing advanced CSS clipping masks to expose underlying asset architecture.",
+        body: "This specialized interface component translates visual formulas on the fly. It bypasses rendering latency by using hardware-accelerated clipping filters.",
+        inks: "FLUORESCENT PINK, PURPLE",
+        weight: "STICKER (0.002)",
+        stats: [
+          { val: "60", label: "FPS TICK", color: "text-riso-purple" },
+          { val: "2.1ms", label: "LATENCY", color: "text-riso-teal" },
+          { val: "SINGLE", label: "DRUM", color: "text-riso-carbon" },
+          { val: "97.4%", label: "TRANS", color: "text-riso-purple" }
+        ],
+        tech: "CSS clip-path with dynamic circle() radius updates. Dual-layer DOM stacking with mix-blend-mode difference."
+      },
+      bleed: {
+        title: "INK BLEED ANALYSIS",
+        category: "⚡ COLOR STATUS SHEET",
+        description: "A live typographic diagnostic model mapping fluid vector expansion parameters onto digital screens.",
+        body: "Our custom SVG turbulence filter mimics wet ink soaking into cotton fibers, with real-time variables updating based on instantaneous cursor velocities.",
+        inks: "FLUORESCENT PINK, AQUA TEAL",
+        weight: "STICKER (0.002)",
+        stats: [
+          { val: "144", label: "FPS TICK", color: "text-riso-pink" },
+          { val: "0.4ms", label: "LATENCY", color: "text-riso-teal" },
+          { val: "DUAL", label: "DRUMS", color: "text-riso-carbon" },
+          { val: "100%", label: "TRANS", color: "text-riso-pink" }
+        ],
+        tech: "SVG feTurbulence + feDisplacementMap with animated baseFrequency. GSAP ticker drives real-time filter scale modulation."
+      }
     };
     function openZine(key) {
       currentlyOpenZineKey = key;
@@ -1022,14 +1105,31 @@
       document.getElementById('project-view-title').innerText = data.title;
       document.getElementById('project-view-tag').innerText = data.category;
       document.getElementById('project-view-body').innerText = data.description + ' ' + data.body;
-      const weightEl = document.getElementById('project-view-weight');
-      if (currentlyOpenZineKey === 'yuki') weightEl.innerText = "CARDBOARD (0.005)";
-      else if (currentlyOpenZineKey === 'stencil') weightEl.innerText = "PAPER-LIGHT (0.001)";
-      else weightEl.innerText = "STICKER (0.002)";
+      document.getElementById('project-view-inks').innerText = data.inks;
+      document.getElementById('project-view-weight').innerText = data.weight;
+      const techEl = document.getElementById('project-view-tech');
+      if (techEl) techEl.innerText = data.tech || '';
+      const statsContainer = document.getElementById('project-view-stats');
+      if (statsContainer && data.stats) {
+        statsContainer.innerHTML = data.stats.map(s =>
+          `<div class="border-2 border-black bg-white p-2"><div class="font-serif text-2xl font-black ${s.color}">${s.val}</div><div class="font-mono text-[8px] uppercase">${s.label}</div></div>`
+        ).join('');
+      }
       closeZine();
       setTimeout(() => switchScreen('project-view'), 500);
     }
-    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeZine(); });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (currentlyOpenZineKey) closeZine();
+        else if (currentActiveScreen === 'project-view') switchScreen('desk');
+        return;
+      }
+      const num = parseInt(e.key);
+      if (num >= 1 && num <= 5) {
+        const screens = ['desk', 'lab', 'archive', 'separation', 'queue'];
+        switchScreen(screens[num - 1]);
+      }
+    });
 
     // PAGE ROUTER
     function switchScreen(targetScreenId) {
@@ -1106,6 +1206,15 @@
       playStampChime();
       renderSeparation();
     }
+    function exportSeparation() {
+      if (!sepCanvas) return;
+      renderSeparation();
+      const link = document.createElement('a');
+      link.download = 'mag-riso-composite-' + new Date().toISOString().slice(0,10) + '.png';
+      link.href = sepCanvas.toDataURL('image/png');
+      link.click();
+      playStampChime();
+    }
 
     // PRINT QUEUE
     const queueItems = [
@@ -1123,7 +1232,7 @@
         const statusColor = item.status === 'COMPLETE' ? 'bg-riso-teal' : item.status === 'DRYING' ? 'bg-riso-yellow' : 'bg-riso-pink';
         return `
         <div class="queue-card border-4 border-black bg-white p-6 shadow-[6px_6px_0px_rgba(0,0,0,1)] relative overflow-hidden" style="transform:rotate(${i % 2 === 0 ? -0.5 : 0.5}deg)">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer" onclick="toggleQueueDetail('${item.id}')">
             <div class="flex items-center gap-4">
               <div class="w-16 h-16 border-3 border-black flex items-center justify-center font-mono text-xs font-bold ${statusColor} text-white">
                 ${item.id.split('-')[1]}
@@ -1139,11 +1248,32 @@
             </div>
             <div class="flex items-center gap-3">
               <span class="font-mono text-[10px] uppercase font-bold border-2 border-black px-3 py-1 ${statusColor} text-white">${item.status}</span>
-              <button onclick="switchScreen('lab')" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-white px-3 py-1 hover:bg-riso-pink hover:text-white transition-colors">[INSPECT]</button>
+              <button onclick="event.stopPropagation();switchScreen('lab')" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-white px-3 py-1 hover:bg-riso-pink hover:text-white transition-colors">[INSPECT]</button>
+            </div>
+          </div>
+          <div id="queue-detail-${item.id}" class="queue-detail mt-4 pt-4 border-t-2 border-black/10">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span class="font-mono text-[9px] uppercase text-riso-carbon/50 block mb-1">LAYER STACK</span>
+                <div class="space-y-1">
+                  ${Array.from({length: item.layers}).map((_, li) => `<div class="layer-stack-bar" style="background:${item.colors[li % item.colors.length]};width:${80 + Math.random()*20}%"></div>`).join('')}
+                </div>
+              </div>
+              <div class="font-mono text-[10px] text-riso-carbon/70 leading-relaxed">
+                <div><strong>DRUM SEQUENCE:</strong> ${item.colors.map((c, ci) => `PASS ${ci+1} [${c.toUpperCase()}]`).join(' → ')}</div>
+                <div class="mt-1"><strong>STOCK:</strong> RAW COTTON 300GSM</div>
+                <div class="mt-1"><strong>PRESSURE:</strong> ${(0.8 + Math.random()*0.4).toFixed(2)} N/cm²</div>
+              </div>
             </div>
           </div>
         </div>`;
       }).join('');
+    }
+    function toggleQueueDetail(id) {
+      const el = document.getElementById('queue-detail-' + id);
+      if (!el) return;
+      el.classList.toggle('open');
+      playStampChime();
     }
 
     // ANIMATION LOOP FOR CANVAS SCREENS
