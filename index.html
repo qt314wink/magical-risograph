@@ -58,7 +58,26 @@
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     }
     .letterpress-debossed {
-      text-shadow: -1px -1px 0px rgba(0,0,0,0.2), 1px 1px 0px rgba(255,255,255,0.8);
+      text-shadow: 
+        -1px -1px 0px rgba(0,0,0,0.15),
+        1px 1px 0px rgba(255,255,255,0.7),
+        2px 2px 2px rgba(0,0,0,0.08),
+        inset 1px 1px 1px rgba(0,0,0,0.1);
+    }
+    .ink-squash {
+      border-radius: 45% 55% 50% 50% / 55% 45% 55% 45%;
+    }
+    .paper-cotton .grain-overlay {
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.12;
+    }
+    .paper-laid .grain-overlay {
+      background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 3px);
+      opacity: 0.25;
+    }
+    .paper-rough .grain-overlay {
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.3' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.22;
     }
     ::-webkit-scrollbar { width: 10px; }
     ::-webkit-scrollbar-track { background: #F4F1EA; border-left: 3px solid #1A1A1A; }
@@ -215,6 +234,7 @@
       <button onclick="switchScreen('separation')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="separation">[channels]</button>
       <button onclick="switchScreen('queue')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="queue">[queue]</button>
       <button onclick="switchScreen('library')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="library">[library]</button>
+      <button onclick="switchScreen('compose')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="compose">[compose]</button>
     </nav>
   </header>
 
@@ -349,6 +369,20 @@
               </div>
               <input type="file" id="lab-image-input" accept="image/*" class="hidden" onchange="handleLabImageUpload(this)">
               <span id="lab-image-name" class="font-mono text-[9px] text-riso-carbon/50 mt-1 block">PROCEDURAL MODE ACTIVE</span>
+            </div>
+            <div class="pt-4 border-t border-black/10 space-y-4">
+              <div>
+                <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">IMPRESSION DEPTH</span><span id="val-lab-pressure" class="text-riso-pink font-bold">3.0</span></div>
+                <input type="range" id="slider-lab-pressure" min="0" max="10" value="3" step="0.5" class="w-full accent-riso-pink cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+              </div>
+              <div>
+                <span class="block font-mono text-xs font-bold mb-2 uppercase tracking-wider">[Paper Stock]</span>
+                <div class="grid grid-cols-3 gap-2">
+                  <button onclick="changePaper('cotton')" class="paper-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-pink hover:text-white transition-colors uppercase font-bold text-center active" data-paper="cotton">COTTON</button>
+                  <button onclick="changePaper('laid')" class="paper-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-teal hover:text-white transition-colors uppercase font-bold text-center" data-paper="laid">LAID</button>
+                  <button onclick="changePaper('rough')" class="paper-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-yellow hover:text-white transition-colors uppercase font-bold text-center" data-paper="rough">ROUGH</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -580,7 +614,60 @@
     </section>
   </main>
 
-  <!-- SCREEN 7: PROJECT VIEW -->
+  <!-- SCREEN 7: THE COMPOSING ROOM -->
+  <main id="screen-compose" class="screen-wrapper w-full hidden-screen pb-16">
+    <section class="max-w-6xl mx-auto px-6 pt-12">
+      <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-black pb-8">
+        <div>
+          <span class="font-mono text-xs uppercase text-riso-teal font-bold tracking-widest block mb-2">[MOVABLE TYPE SHOP - CM-01]</span>
+          <h2 class="font-serif text-5xl md:text-7xl font-black uppercase tracking-tight text-riso-carbon letterpress-debossed">THE COMPOSING ROOM</h2>
+        </div>
+        <div class="max-w-sm">
+          <p class="font-sans text-sm text-riso-carbon/70 leading-relaxed">Set type by hand. Select letters from the case, arrange them on the stick, and pull a proof. Each block carries the weight and texture of vintage wood type.</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-4">
+          <div class="border-4 border-black bg-riso-paper p-4 shadow-[6px_6px_0px_rgba(0,0,0,1)]">
+            <h3 class="font-syne font-bold text-lg uppercase text-riso-carbon border-b-2 border-black pb-2 mb-4">TYPE CASE</h3>
+            <div id="type-case-grid" class="grid grid-cols-6 gap-1">
+              <!-- Injected by JS -->
+            </div>
+          </div>
+        </div>
+        <div class="lg:col-span-8">
+          <div class="border-4 border-black bg-white p-6 shadow-[6px_6px_0px_rgba(0,0,0,1)] min-h-[200px]">
+            <div class="flex items-center justify-between border-b-2 border-black pb-3 mb-4">
+              <h3 class="font-syne font-bold text-lg uppercase text-riso-carbon">COMPOSING STICK</h3>
+              <div class="flex gap-2">
+                <button onclick="clearComposingStick()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-white px-3 py-1 hover:bg-riso-pink hover:text-white transition-colors">[CLEAR]</button>
+                <button onclick="pullProof()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-riso-teal text-white px-3 py-1 hover:bg-riso-pink transition-colors">[PULL PROOF]</button>
+              </div>
+            </div>
+            <div id="composing-stick" class="flex flex-wrap gap-2 min-h-[80px] items-center p-4 bg-riso-paper/50 border-2 border-dashed border-black/20">
+              <span class="font-mono text-[10px] text-riso-carbon/40 uppercase">CLICK LETTERS FROM THE CASE TO BEGIN...</span>
+            </div>
+          </div>
+          <div id="proof-result" class="mt-8 border-4 border-black bg-white p-6 shadow-[8px_8px_0px_rgba(0,0,0,1)] hidden relative overflow-hidden">
+            <div class="absolute top-2 right-2 font-mono text-[9px] text-riso-carbon/40 uppercase">PROOF_001</div>
+            <canvas id="compose-canvas" class="w-full h-[300px]"></canvas>
+            <div class="flex justify-end gap-2 mt-4">
+              <button onclick="exportProof()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-riso-pink text-white px-4 py-2 hover:bg-riso-carbon transition-colors">[EXPORT PROOF]</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- PRESS PULL ANIMATION OVERLAY -->
+  <div id="press-overlay" class="fixed inset-0 z-[99998] pointer-events-none flex items-start justify-center opacity-0 transition-opacity duration-200">
+    <div id="press-platen" class="w-full h-1/2 bg-riso-carbon border-b-8 border-black transform -translate-y-full transition-transform duration-700 ease-in-out flex items-end justify-center pb-8">
+      <div class="font-mono text-xs text-white uppercase tracking-[0.5em] opacity-50">MAG-RISO PRESS</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 8: PROJECT VIEW -->
   <main id="screen-project-view" class="screen-wrapper w-full hidden-screen min-h-[calc(100vh-80px)] bg-riso-paper pb-16">
     <section class="max-w-4xl mx-auto px-6 pt-12">
       <button onclick="switchScreen('desk')" class="font-mono text-xs uppercase font-bold tracking-wider border-2 border-black bg-white px-4 py-2 shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:bg-riso-pink hover:text-white transition-colors active:translate-y-0.5 mb-10">← BACK TO DESK WORKSPACE</button>
@@ -848,7 +935,7 @@
       const dy = e.changedTouches[0].screenY - touchStartY;
       const dt = Date.now() - touchStartTime;
       if (dt > 400 || Math.abs(dx) < 60 || Math.abs(dy) > 100) return;
-      const screens = ['desk', 'lab', 'archive', 'separation', 'queue', 'library'];
+      const screens = ['desk', 'lab', 'archive', 'separation', 'queue', 'library', 'compose'];
       const idx = screens.indexOf(currentActiveScreen);
       if (dx < 0 && idx < screens.length - 1) switchScreen(screens[idx + 1]);
       if (dx > 0 && idx > 0) switchScreen(screens[idx - 1]);
@@ -906,14 +993,22 @@
     // HALFTONE LAB
     const labCanvas = document.getElementById('lab-processor-canvas');
     const labCtx = labCanvas?.getContext('2d');
-    let labConfig = { dotSize: 6, frequency: 16, offset: 6, inkColor1: '#FF4B5C', inkColor2: '#00D2D3' };
+    let labConfig = { dotSize: 6, frequency: 16, offset: 6, pressure: 3, inkColor1: '#FF4B5C', inkColor2: '#00D2D3' };
     let labImageData = null, labImagePixels = null;
+    function drawInkSquash(ctx, cx, cy, radius, pressure) {
+      const squish = 1 + pressure * 0.06;
+      const flatten = Math.max(0.6, 1 - pressure * 0.04);
+      const rotation = (cx + cy) * 0.05;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, radius * squish, radius * flatten, rotation, 0, Math.PI * 2);
+      ctx.fill();
+    }
     function renderLabHalftone() {
       if (!labCanvas || !labCtx || currentActiveScreen !== 'lab') return;
       const w = labCanvas.width, h = labCanvas.height;
       labCtx.clearRect(0, 0, w, h);
       labCtx.fillStyle = '#F4F1EA'; labCtx.fillRect(0, 0, w, h);
-      const density = labConfig.frequency, radiusMax = labConfig.dotSize, misalignment = labConfig.offset;
+      const density = labConfig.frequency, radiusMax = labConfig.dotSize, misalignment = labConfig.offset, pressure = labConfig.pressure;
       if (labImagePixels) {
         const imgW = labImagePixels.width, imgH = labImagePixels.height;
         labCtx.save(); labCtx.fillStyle = labConfig.inkColor2; labCtx.globalCompositeOperation = 'multiply';
@@ -924,7 +1019,7 @@
             const idx = (sy * imgW + sx) * 4;
             const brightness = (labImagePixels.data[idx] + labImagePixels.data[idx+1] + labImagePixels.data[idx+2]) / 765;
             const radius = Math.max(0.2, (1 - brightness) * radiusMax);
-            labCtx.beginPath(); labCtx.arc(x - misalignment, y - misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
+            drawInkSquash(labCtx, x - misalignment, y - misalignment * 0.5, radius, pressure);
           }
         }
         labCtx.restore();
@@ -936,7 +1031,7 @@
             const idx = (sy * imgW + sx) * 4;
             const brightness = (labImagePixels.data[idx] + labImagePixels.data[idx+1] + labImagePixels.data[idx+2]) / 765;
             const radius = Math.max(0.2, (1 - brightness) * radiusMax);
-            labCtx.beginPath(); labCtx.arc(x + misalignment, y + misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
+            drawInkSquash(labCtx, x + misalignment, y + misalignment * 0.5, radius, pressure);
           }
         }
         labCtx.restore();
@@ -947,7 +1042,7 @@
             const distToCenter = Math.sqrt(Math.pow(x - w / 2, 2) + Math.pow(y - h / 2, 2));
             const luminance = (Math.sin(distToCenter * 0.015 - (Date.now() * 0.002)) + 1.0) / 2.0;
             const radius = Math.max(0.2, luminance * radiusMax);
-            labCtx.beginPath(); labCtx.arc(x - misalignment, y - misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
+            drawInkSquash(labCtx, x - misalignment, y - misalignment * 0.5, radius, pressure);
           }
         }
         labCtx.restore();
@@ -957,7 +1052,7 @@
             const distToCenter = Math.sqrt(Math.pow(x - w / 2, 2) + Math.pow(y - h / 2, 2));
             const luminance = (Math.sin(distToCenter * 0.015 - (Date.now() * 0.002) + Math.PI) + 1.0) / 2.0;
             const radius = Math.max(0.2, luminance * radiusMax);
-            labCtx.beginPath(); labCtx.arc(x + misalignment, y + misalignment * 0.5, radius, 0, Math.PI * 2); labCtx.fill();
+            drawInkSquash(labCtx, x + misalignment, y + misalignment * 0.5, radius, pressure);
           }
         }
         labCtx.restore();
@@ -998,14 +1093,18 @@
     const valLabDot = document.getElementById('val-lab-dot');
     const valLabFreq = document.getElementById('val-lab-freq');
     const valLabOffset = document.getElementById('val-lab-offset');
+    const sliderLabPressure = document.getElementById('slider-lab-pressure');
+    const valLabPressure = document.getElementById('val-lab-pressure');
     function syncLabControllers() {
       if (!sliderLabDot || !sliderLabFreq || !sliderLabOffset) return;
       labConfig.dotSize = parseFloat(sliderLabDot.value);
       labConfig.frequency = parseInt(sliderLabFreq.value);
       labConfig.offset = parseInt(sliderLabOffset.value);
+      labConfig.pressure = parseFloat(sliderLabPressure?.value || 3);
       valLabDot.innerText = labConfig.dotSize.toFixed(1) + 'px';
       valLabFreq.innerText = labConfig.frequency + 'px';
       valLabOffset.innerText = labConfig.offset + 'px';
+      if (valLabPressure) valLabPressure.innerText = labConfig.pressure.toFixed(1);
       renderLabHalftone();
       saveState();
     }
@@ -1013,6 +1112,16 @@
       sliderLabDot.addEventListener('input', syncLabControllers);
       sliderLabFreq.addEventListener('input', syncLabControllers);
       sliderLabOffset.addEventListener('input', syncLabControllers);
+      if (sliderLabPressure) sliderLabPressure.addEventListener('input', syncLabControllers);
+    }
+    function changePaper(type) {
+      document.body.classList.remove('paper-cotton', 'paper-laid', 'paper-rough');
+      document.body.classList.add('paper-' + type);
+      document.querySelectorAll('.paper-btn').forEach(btn => {
+        if (btn.getAttribute('data-paper') === type) { btn.classList.add('bg-riso-carbon', 'text-white'); btn.classList.remove('bg-white'); }
+        else { btn.classList.remove('bg-riso-carbon', 'text-white'); btn.classList.add('bg-white'); }
+      });
+      playStampChime();
     }
     function changeInksLab(c1, c2, label) {
       labConfig.inkColor1 = c1; labConfig.inkColor2 = c2;
@@ -1445,7 +1554,7 @@
       }
       const num = parseInt(e.key);
       if (num >= 1 && num <= 5) {
-        const screens = ['desk', 'lab', 'archive', 'separation', 'queue', 'library'];
+        const screens = ['desk', 'lab', 'archive', 'separation', 'queue', 'library', 'compose'];
         switchScreen(screens[num - 1]);
       }
     });
@@ -1465,6 +1574,7 @@
           if (sliderLabDot) sliderLabDot.value = labConfig.dotSize;
           if (sliderLabFreq) sliderLabFreq.value = labConfig.frequency;
           if (sliderLabOffset) sliderLabOffset.value = labConfig.offset;
+          if (sliderLabPressure) sliderLabPressure.value = labConfig.pressure || 3;
           syncLabControllers();
           document.querySelectorAll('.lab-ink-btn').forEach(btn => {
             const label = btn.innerText.trim();
@@ -1511,7 +1621,7 @@
       playStampChime();
       playTransitionTone();
       window.location.hash = targetScreenId;
-      const transitionColors = { desk: '#FF4B5C', lab: '#00D2D3', archive: '#FECA57', separation: '#9B59B6', queue: '#E67E22', library: '#9B59B6', 'project-view': '#FF4B5C' };
+      const transitionColors = { desk: '#FF4B5C', lab: '#00D2D3', archive: '#FECA57', separation: '#9B59B6', queue: '#E67E22', library: '#9B59B6', compose: '#00D2D3', 'project-view': '#FF4B5C' };
       if (swipeMask) swipeMask.style.background = transitionColors[targetScreenId] || '#FF4B5C';
       gsap.timeline()
         .to(swipeMask, { clipPath: 'circle(150% at 50% 50%)', duration: 0.75, ease: 'power3.in', onComplete: () => {
@@ -1728,6 +1838,106 @@
       if (preview) preview.classList.remove('hidden');
     }
 
+    // COMPOSING ROOM
+    let composeStick = [];
+    const typeCaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?&.-'.split('');
+    function renderTypeCase() {
+      const grid = document.getElementById('type-case-grid');
+      if (!grid) return;
+      grid.innerHTML = typeCaseChars.map(ch => `
+        <button onclick="addToStick('${ch}')" class="aspect-square border-2 border-black bg-riso-paper hover:bg-riso-yellow flex items-center justify-center font-serif text-lg font-black text-riso-carbon transition-colors select-none" style="transform:rotate(${(Math.random()-0.5)*4}deg)">${ch}</button>
+      `).join('');
+    }
+    function addToStick(ch) {
+      composeStick.push(ch);
+      renderComposingStick();
+      playStampChime();
+    }
+    function renderComposingStick() {
+      const stick = document.getElementById('composing-stick');
+      if (!stick) return;
+      if (composeStick.length === 0) {
+        stick.innerHTML = '<span class="font-mono text-[10px] text-riso-carbon/40 uppercase">CLICK LETTERS FROM THE CASE TO BEGIN...</span>';
+        return;
+      }
+      stick.innerHTML = composeStick.map((ch, i) => `
+        <button onclick="removeFromStick(${i})" class="w-10 h-12 border-2 border-black bg-white flex items-center justify-center font-serif text-xl font-black text-riso-carbon shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-riso-pink hover:text-white transition-colors select-none" style="transform:rotate(${(Math.random()-0.5)*3}deg)">${ch}</button>
+      `).join('');
+    }
+    function removeFromStick(index) {
+      composeStick.splice(index, 1);
+      renderComposingStick();
+      playStampChime();
+    }
+    function clearComposingStick() {
+      composeStick = [];
+      renderComposingStick();
+      document.getElementById('proof-result')?.classList.add('hidden');
+      showToast('STICK CLEARED', 'info');
+    }
+    function animatePressPull(onComplete) {
+      const overlay = document.getElementById('press-overlay');
+      const platen = document.getElementById('press-platen');
+      if (!overlay || !platen) { if (onComplete) onComplete(); return; }
+      overlay.style.opacity = '1';
+      platen.style.transform = 'translateY(0)';
+      playStampChime();
+      setTimeout(() => {
+        platen.style.transform = 'translateY(-100%)';
+        setTimeout(() => { overlay.style.opacity = '0'; if (onComplete) onComplete(); }, 400);
+      }, 700);
+    }
+    function pullProof() {
+      if (composeStick.length === 0) { showToast('SET TYPE FIRST', 'warn'); return; }
+      const canvas = document.getElementById('compose-canvas');
+      const result = document.getElementById('proof-result');
+      if (!canvas || !result) return;
+      result.classList.remove('hidden');
+      canvas.width = canvas.clientWidth || 600;
+      canvas.height = 300;
+      const ctx = canvas.getContext('2d');
+      animatePressPull(() => {
+        ctx.fillStyle = '#F4F1EA'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Paper grain
+        ctx.save(); ctx.globalAlpha = 0.04; ctx.fillStyle = '#1A1A1A';
+        for (let i = 0; i < 2000; i++) ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 1, 1);
+        ctx.restore();
+        const text = composeStick.join('');
+        const fontSize = Math.min(72, (canvas.width / text.length) * 1.4);
+        ctx.font = `900 ${fontSize}px Cinzel, serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const x = canvas.width / 2, y = canvas.height / 2;
+        // Deboss shadow layers
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fillText(text, x - 1, y - 1);
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.fillText(text, x + 1, y + 1);
+        // Ink with slight texture
+        ctx.fillStyle = '#1A1A1A';
+        ctx.fillText(text, x, y);
+        // Ink squash dots around edges
+        ctx.save(); ctx.globalAlpha = 0.08; ctx.fillStyle = '#1A1A1A';
+        for (let i = 0; i < 400; i++) {
+          const dx = (Math.random() - 0.5) * canvas.width * 0.8;
+          const dy = (Math.random() - 0.5) * canvas.height * 0.6;
+          ctx.beginPath(); ctx.arc(x + dx, y + dy, Math.random() * 2, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+        showToast('PROOF PULLED', 'success');
+      });
+    }
+    function exportProof() {
+      const canvas = document.getElementById('compose-canvas');
+      if (!canvas) return;
+      const link = document.createElement('a');
+      link.download = 'mag-riso-proof-' + new Date().toISOString().slice(0,10) + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('PROOF EXPORTED', 'success');
+      playStampChime();
+    }
+
     // ANIMATION LOOP FOR CANVAS SCREENS
     let isTabVisible = true;
     document.addEventListener('visibilitychange', () => { isTabVisible = !document.hidden; });
@@ -1829,6 +2039,7 @@
       renderSeparation();
       renderQueue();
       renderLibrary();
+      renderTypeCase();
     };
   </script>
 </body>
