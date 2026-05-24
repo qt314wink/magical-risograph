@@ -109,12 +109,40 @@
       height: 8px;
       border: 2px solid black;
     }
+    .toast {
+      font-family: 'Space Grotesk', sans-serif;
+      pointer-events: auto;
+      transform: translateX(120%);
+      animation: toastIn 0.4s cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+    @keyframes toastIn {
+      to { transform: translateX(0); }
+    }
+    @keyframes toastOut {
+      to { transform: translateX(120%); opacity: 0; }
+    }
+    .grain-overlay {
+      animation: grainShift 8s steps(10) infinite;
+    }
+    @keyframes grainShift {
+      0%, 100% { background-position: 0 0; }
+      10% { background-position: -5% -10%; }
+      20% { background-position: -15% 5%; }
+      30% { background-position: 7% -25%; }
+      40% { background-position: 20% 10%; }
+      50% { background-position: -10% 15%; }
+      60% { background-position: 25% -5%; }
+      70% { background-position: -20% 20%; }
+      80% { background-position: 5% -15%; }
+      90% { background-position: -15% -10%; }
+    }
   </style>
 </head>
 <body class="relative min-h-screen">
 
   <div class="grain-overlay"></div>
   <div id="page-swipe-ink"></div>
+  <div id="toast-container" class="fixed top-6 right-6 z-[99999] flex flex-col gap-2 pointer-events-none"></div>
   <canvas id="cursor-trail-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-[99998]"></canvas>
 
   <svg class="absolute w-0 h-0 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
@@ -134,6 +162,20 @@
     <button onclick="shakeDesk()" class="plate-shadow bg-riso-teal hover:bg-riso-pink text-white border-3 border-black p-3 rounded-full transition-transform active:scale-95 select-none">
       <i data-lucide="sparkles" class="w-5 h-5 stroke-[2.5]"></i>
     </button>
+    <button onclick="tidyDesk()" class="plate-shadow bg-white hover:bg-riso-pink text-riso-carbon border-3 border-black p-3 rounded-full transition-transform active:scale-95 select-none" title="Tidy Desk">
+      <i data-lucide="layout-grid" class="w-5 h-5 stroke-[2.5]"></i>
+    </button>
+    <button onclick="scatterDesk()" class="plate-shadow bg-riso-pink hover:bg-riso-yellow text-white border-3 border-black p-3 rounded-full transition-transform active:scale-95 select-none" title="Scatter Desk">
+      <i data-lucide="bomb" class="w-5 h-5 stroke-[2.5]"></i>
+    </button>
+    <button onclick="invertGravity()" id="gravity-hud-btn" class="plate-shadow bg-riso-purple hover:bg-riso-teal text-white border-3 border-black p-3 rounded-full transition-transform active:scale-95 select-none" title="Invert Gravity">
+      <i data-lucide="arrow-up-down" class="w-5 h-5 stroke-[2.5]"></i>
+    </button>
+    <div id="audio-visualizer" class="hidden flex-col gap-[2px] items-center justify-center h-10">
+      <div class="w-1 bg-riso-pink animate-pulse" style="height:6px;animation-duration:0.4s"></div>
+      <div class="w-1 bg-riso-teal animate-pulse" style="height:10px;animation-duration:0.6s"></div>
+      <div class="w-1 bg-riso-yellow animate-pulse" style="height:8px;animation-duration:0.5s"></div>
+    </div>
   </div>
 
   <!-- HEADER -->
@@ -161,6 +203,7 @@
       <button onclick="switchScreen('archive')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="archive">[archive]</button>
       <button onclick="switchScreen('separation')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="separation">[channels]</button>
       <button onclick="switchScreen('queue')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="queue">[queue]</button>
+      <button onclick="switchScreen('library')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="library">[library]</button>
     </nav>
   </header>
 
@@ -180,6 +223,12 @@
     </section>
 
     <section id="physics-container" class="relative w-full h-[650px] bg-[#F4F1EA] border-b-4 border-black overflow-hidden" style="background-image:radial-gradient(#cac6b9 2px,transparent 2px);background-size:32px 32px;">
+      <div id="physics-loading" class="absolute inset-0 z-20 flex items-center justify-center bg-[#F4F1EA]">
+        <div class="text-center">
+          <div class="w-12 h-12 border-4 border-black border-t-riso-pink rounded-full animate-spin mx-auto mb-4"></div>
+          <span class="font-mono text-xs uppercase font-bold tracking-widest">Calibrating Gravity...</span>
+        </div>
+      </div>
       <canvas id="halftone-renderer" class="absolute inset-0 w-full h-full opacity-40 pointer-events-none"></canvas>
       <div id="physics-scene" class="absolute inset-0 pointer-events-none z-10">
 
@@ -452,13 +501,63 @@
         </div>
       </div>
 
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="filterQueue('ALL')" class="queue-filter-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-riso-carbon text-white px-3 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-filter="ALL">[ALL]</button>
+          <button onclick="filterQueue('COMPLETE')" class="queue-filter-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-3 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-filter="COMPLETE">[COMPLETE]</button>
+          <button onclick="filterQueue('DRYING')" class="queue-filter-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-3 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-filter="DRYING">[DRYING]</button>
+          <button onclick="filterQueue('QUEUED')" class="queue-filter-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-3 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-filter="QUEUED">[QUEUED]</button>
+        </div>
+        <select onchange="sortQueue(this.value)" class="font-mono text-[10px] border-2 border-black bg-white px-2 py-1 uppercase font-bold tracking-wider cursor-pointer">
+          <option value="date-desc">NEWEST FIRST</option>
+          <option value="date-asc">OLDEST FIRST</option>
+          <option value="layers-desc">MOST LAYERS</option>
+        </select>
+      </div>
       <div class="space-y-6" id="queue-feed">
         <!-- Queue items injected by JS -->
       </div>
     </section>
   </main>
 
-  <!-- SCREEN 6: PROJECT VIEW -->
+  <!-- SCREEN 6: RISO COLOR LIBRARY -->
+  <main id="screen-library" class="screen-wrapper w-full hidden-screen pb-16">
+    <section class="max-w-6xl mx-auto px-6 pt-12">
+      <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-black pb-8">
+        <div>
+          <span class="font-mono text-xs uppercase text-riso-pink font-bold tracking-widest block mb-2">[INK REFERENCE ARCHIVE - RL-01]</span>
+          <h2 class="font-serif text-5xl md:text-7xl font-black uppercase tracking-tight text-riso-carbon letterpress-debossed">THE INK LIBRARY</h2>
+        </div>
+        <div class="max-w-sm">
+          <p class="font-sans text-sm text-riso-carbon/70 leading-relaxed">The complete risograph drum catalog. Click any swatch to copy its hex code. Toggle channels to preview overprint combinations.</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-3 mb-8">
+        <button onclick="filterLibrary('all')" class="lib-filter-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-riso-carbon text-white px-3 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)]" data-libfilter="all">[ALL]</button>
+        <button onclick="filterLibrary('fluorescent')" class="lib-filter-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-3 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)]" data-libfilter="fluorescent">[FLUORESCENT]</button>
+        <button onclick="filterLibrary('standard')" class="lib-filter-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-3 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)]" data-libfilter="standard">[STANDARD]</button>
+      </div>
+      <div id="library-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Injected by JS -->
+      </div>
+      <div id="library-preview" class="mt-12 border-4 border-black bg-white p-8 shadow-[8px_8px_0px_rgba(0,0,0,1)] hidden">
+        <h3 class="font-syne font-bold text-xl uppercase text-riso-carbon mb-4">OVERPRINT PREVIEW</h3>
+        <div class="flex items-center justify-center gap-8">
+          <div id="lib-preview-a" class="w-24 h-24 border-4 border-black"></div>
+          <span class="font-mono text-2xl font-bold">+</span>
+          <div id="lib-preview-b" class="w-24 h-24 border-4 border-black"></div>
+          <span class="font-mono text-2xl font-bold">=</span>
+          <div id="lib-preview-result" class="w-24 h-24 border-4 border-black relative overflow-hidden">
+            <div id="lib-preview-a-layer" class="absolute inset-0"></div>
+            <div id="lib-preview-b-layer" class="absolute inset-0 mix-blend-multiply"></div>
+          </div>
+        </div>
+        <p class="font-mono text-[10px] text-riso-carbon/60 mt-4 text-center uppercase">* Multiply blend simulates physical ink overprint</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- SCREEN 7: PROJECT VIEW -->
   <main id="screen-project-view" class="screen-wrapper w-full hidden-screen min-h-[calc(100vh-80px)] bg-riso-paper pb-16">
     <section class="max-w-4xl mx-auto px-6 pt-12">
       <button onclick="switchScreen('desk')" class="font-mono text-xs uppercase font-bold tracking-wider border-2 border-black bg-white px-4 py-2 shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:bg-riso-pink hover:text-white transition-colors active:translate-y-0.5 mb-10">← BACK TO DESK WORKSPACE</button>
@@ -642,6 +741,35 @@
       osc.start();
       osc.stop(audioCtx.currentTime + 0.35);
     }
+    function playCollisionTone(impulse) {
+      if (!audioCtx || !globalAudioEnabled) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      const freq = 200 + Math.min(impulse * 35, 700);
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.12);
+    }
+    function playTransitionTone() {
+      if (!audioCtx || !globalAudioEnabled) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(320, audioCtx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.25);
+    }
+    let ambientOsc = null, ambientGain = null;
     function toggleGlobalAudio() {
       if (!audioCtx) initAudio();
       globalAudioEnabled = !globalAudioEnabled;
@@ -651,13 +779,57 @@
         btn.classList.remove('bg-riso-yellow'); btn.classList.add('bg-riso-pink', 'text-white');
         if (telemetry) telemetry.innerText = "PRO-AUDIO: MASTER SYNTHESIS ACTIVE";
         playStampChime();
+        if (!ambientOsc) {
+          ambientOsc = audioCtx.createOscillator();
+          ambientGain = audioCtx.createGain();
+          ambientOsc.type = 'sine';
+          ambientOsc.frequency.setValueAtTime(55, audioCtx.currentTime);
+          ambientGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+          ambientOsc.connect(ambientGain);
+          ambientGain.connect(audioCtx.destination);
+          ambientOsc.start();
+        } else {
+          ambientGain.gain.setTargetAtTime(0.04, audioCtx.currentTime, 0.5);
+        }
+        const viz = document.getElementById('audio-visualizer');
+        if (viz) viz.classList.remove('hidden'); viz.classList.add('flex');
       } else {
         btn.classList.add('bg-riso-yellow'); btn.classList.remove('bg-riso-pink', 'text-white');
         if (audioGain) audioGain.gain.setValueAtTime(0, audioCtx.currentTime);
         if (telemetry) telemetry.innerText = "PRO-AUDIO: MUTED (STANDBY)";
+        if (ambientGain) ambientGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);
+        const viz = document.getElementById('audio-visualizer');
+        if (viz) viz.classList.add('hidden'); viz.classList.remove('flex');
       }
+      saveState();
     }
     window.addEventListener('click', () => { if (!audioCtx) initAudio(); }, { once: true });
+
+    // TOUCH / MOBILE DETECTION
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+    if (isTouchDevice) {
+      document.body.style.cursor = 'auto';
+      document.querySelectorAll('button, a, input, textarea, select').forEach(el => el.style.cursor = 'auto');
+      const trail = document.getElementById('cursor-trail-canvas');
+      if (trail) trail.style.display = 'none';
+    }
+    // SWIPE NAVIGATION
+    let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+    window.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+      touchStartTime = Date.now();
+    }, { passive: true });
+    window.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].screenX - touchStartX;
+      const dy = e.changedTouches[0].screenY - touchStartY;
+      const dt = Date.now() - touchStartTime;
+      if (dt > 400 || Math.abs(dx) < 60 || Math.abs(dy) > 100) return;
+      const screens = ['desk', 'lab', 'archive', 'separation', 'queue', 'library'];
+      const idx = screens.indexOf(currentActiveScreen);
+      if (dx < 0 && idx < screens.length - 1) switchScreen(screens[idx + 1]);
+      if (dx > 0 && idx > 0) switchScreen(screens[idx - 1]);
+    }, { passive: true });
 
     // CURSOR TRAIL
     const trailCanvas = document.getElementById('cursor-trail-canvas');
@@ -757,6 +929,7 @@
       valLabFreq.innerText = labConfig.frequency + 'px';
       valLabOffset.innerText = labConfig.offset + 'px';
       renderLabHalftone();
+      saveState();
     }
     if (sliderLabDot) {
       sliderLabDot.addEventListener('input', syncLabControllers);
@@ -769,7 +942,7 @@
         if (btn.innerText === label) { btn.classList.add('bg-riso-carbon', 'text-white'); }
         else { btn.classList.remove('bg-riso-carbon', 'text-white'); }
       });
-      playStampChime(); renderLabHalftone();
+      playStampChime(); renderLabHalftone(); saveState();
     }
 
     // KINETIC TYPE
@@ -899,11 +1072,21 @@
       mouseConstraint.mouse.element.removeEventListener("DOMMouseScroll", mouseConstraint.mouse.mousewheel);
 
       let dragStartPos = { x: 0, y: 0 }, dragStartTime = 0;
-      Events.on(mouseConstraint, 'mousedown', (event) => { dragStartPos = { ...event.mouse.position }; dragStartTime = Date.now(); initAudio(); });
+      Events.on(mouseConstraint, 'mousedown', (event) => { 
+        dragStartPos = { ...event.mouse.position }; 
+        dragStartTime = Date.now(); 
+        initAudio();
+        if (event.source.body && event.source.body.domElement) {
+          event.source.body.domElement.style.zIndex = '50';
+        }
+      });
       Events.on(mouseConstraint, 'dragend', (event) => {
         const endPos = event.mouse.position;
         const dist = Math.sqrt(Math.pow(endPos.x - dragStartPos.x, 2) + Math.pow(endPos.y - dragStartPos.y, 2));
         const dt = Date.now() - dragStartTime;
+        if (event.source.body && event.source.body.domElement) {
+          event.source.body.domElement.style.zIndex = '';
+        }
         if (dist < 8 && dt < 450 && event.source.body) {
           const dom = event.source.body.domElement;
           if (dom) {
@@ -911,6 +1094,14 @@
             if (btn) btn.click();
           }
         }
+      });
+      Events.on(engine, 'collisionStart', (event) => {
+        if (!globalAudioEnabled) return;
+        let maxImpulse = 0;
+        event.pairs.forEach(pair => {
+          if (pair.collision.normalImpulse > maxImpulse) maxImpulse = pair.collision.normalImpulse;
+        });
+        if (maxImpulse > 4) playCollisionTone(maxImpulse);
       });
 
       Events.on(engine, 'afterUpdate', () => {
@@ -937,6 +1128,46 @@
       cardsMapping.forEach((body) => { Matter.Body.applyForce(body, body.position, { x: (Math.random() - 0.5) * 0.1, y: -Math.random() * 0.15 }); });
       playStampChime();
     }
+    function tidyDesk() {
+      const cols = 2, gap = 40;
+      const container = document.getElementById('physics-container');
+      const w = container.clientWidth || 800;
+      const h = container.clientHeight || 650;
+      const cardW = 320, cardH = 200;
+      cardsMapping.forEach((body, i) => {
+        const row = Math.floor(i / cols), col = i % cols;
+        const tx = (w - cols * cardW) / 2 + col * (cardW + gap) + cardW / 2;
+        const ty = (h - 2 * cardH) / 2 + row * (cardH + gap) + cardH / 2;
+        Matter.Body.setPosition(body, { x: tx, y: ty });
+        Matter.Body.setAngle(body, 0);
+        Matter.Body.setVelocity(body, { x: 0, y: 0 });
+        Matter.Body.setAngularVelocity(body, 0);
+      });
+      playStampChime();
+      showToast('DESK TIDIED', 'info');
+    }
+    function scatterDesk() {
+      const container = document.getElementById('physics-container');
+      const w = container.clientWidth || 800;
+      const h = container.clientHeight || 650;
+      cardsMapping.forEach((body) => {
+        Matter.Body.applyForce(body, body.position, { 
+          x: (Math.random() - 0.5) * 0.25, 
+          y: (Math.random() - 0.5) * 0.25 
+        });
+        Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.3);
+      });
+      playStampChime();
+      showToast('DESK SCATTERED', 'warn');
+    }
+    function invertGravity() {
+      if (!engine) return;
+      engine.gravity.y = engine.gravity.y > 0 ? -0.35 : 0.35;
+      const btn = document.getElementById('gravity-hud-btn');
+      if (btn) btn.classList.toggle('bg-riso-purple'); btn.classList.toggle('bg-riso-teal');
+      playStampChime();
+      showToast(engine.gravity.y > 0 ? 'GRAVITY NORMAL' : 'GRAVITY INVERTED', 'info');
+    }
 
     // FORM CRUMPLE
     function handleCrumpleSubmit(e) {
@@ -954,11 +1185,21 @@
       newBall.innerHTML = '✉️<br/>FORM';
       document.getElementById('physics-scene').appendChild(newBall);
       const ballBody = Bodies.circle(width / 2, 50, 32, { restitution: 0.62, frictionAir: 0.06, density: 0.012 });
+      ballBody.label = 'FormBall';
       ballBody.domElement = newBall;
       World.add(engine.world, ballBody);
       cardsMapping.push(ballBody);
       Body.setVelocity(ballBody, { x: gsap.utils.random(-6, 6), y: 4 });
       playStampChime();
+      // Cleanup old form balls to prevent memory leak
+      const formBalls = cardsMapping.filter(b => b.label === 'FormBall');
+      if (formBalls.length > 5) {
+        const old = formBalls.shift();
+        if (old && old.domElement) { old.domElement.remove(); }
+        if (old) { World.remove(engine.world, old); }
+        const idx = cardsMapping.indexOf(old);
+        if (idx > -1) cardsMapping.splice(idx, 1);
+      }
       const formName = document.getElementById('form-name')?.value || 'UNKNOWN SHEET';
       const nextIdNum = 93 + queueItems.length;
       queueItems.unshift({
@@ -1126,10 +1367,61 @@
       }
       const num = parseInt(e.key);
       if (num >= 1 && num <= 5) {
-        const screens = ['desk', 'lab', 'archive', 'separation', 'queue'];
+        const screens = ['desk', 'lab', 'archive', 'separation', 'queue', 'library'];
         switchScreen(screens[num - 1]);
       }
     });
+
+    // SAVE / LOAD STATE
+    function saveState() {
+      const state = { labConfig, sepChannels, globalAudioEnabled, currentActiveScreen };
+      localStorage.setItem('magRisoState', JSON.stringify(state));
+    }
+    function loadState() {
+      try {
+        const raw = localStorage.getItem('magRisoState');
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        if (state.labConfig) {
+          Object.assign(labConfig, state.labConfig);
+          if (sliderLabDot) sliderLabDot.value = labConfig.dotSize;
+          if (sliderLabFreq) sliderLabFreq.value = labConfig.frequency;
+          if (sliderLabOffset) sliderLabOffset.value = labConfig.offset;
+          syncLabControllers();
+          document.querySelectorAll('.lab-ink-btn').forEach(btn => {
+            const label = btn.innerText.trim();
+            const map = { 'Pink / Teal': '#FF4B5C,#00D2D3', 'Pink / Yellow': '#FF4B5C,#FECA57', 'Teal / Yellow': '#00D2D3,#FECA57' };
+            if (map[label] === labConfig.inkColor1 + ',' + labConfig.inkColor2) {
+              btn.classList.add('bg-riso-carbon', 'text-white');
+            } else {
+              btn.classList.remove('bg-riso-carbon', 'text-white');
+            }
+          });
+        }
+        if (state.sepChannels) {
+          Object.keys(state.sepChannels).forEach(ch => {
+            sepChannels[ch] = state.sepChannels[ch];
+            const strip = document.getElementById('channel-' + ch);
+            const check = document.getElementById('check-' + ch);
+            if (strip) {
+              if (sepChannels[ch]) { strip.classList.remove('off'); }
+              else { strip.classList.add('off'); }
+            }
+            if (check) check.style.opacity = sepChannels[ch] ? '1' : '0.2';
+          });
+        }
+        if (state.globalAudioEnabled && !globalAudioEnabled) toggleGlobalAudio();
+        if (state.currentActiveScreen && !window.location.hash) {
+          document.getElementById('screen-desk')?.classList.add('hidden-screen');
+          document.getElementById('screen-' + state.currentActiveScreen)?.classList.remove('hidden-screen');
+          currentActiveScreen = state.currentActiveScreen;
+          document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+            if (btn.getAttribute('data-target') === currentActiveScreen) { btn.classList.add('bg-riso-teal'); btn.classList.remove('bg-white'); }
+            else { btn.classList.add('bg-white'); btn.classList.remove('bg-riso-teal'); }
+          });
+        }
+      } catch(e) {}
+    }
 
     // PAGE ROUTER
     function switchScreen(targetScreenId) {
@@ -1139,6 +1431,10 @@
       const swipeMask = document.getElementById('page-swipe-ink');
       if (!activeEl || !targetEl || !swipeMask) return;
       playStampChime();
+      playTransitionTone();
+      window.location.hash = targetScreenId;
+      const transitionColors = { desk: '#FF4B5C', lab: '#00D2D3', archive: '#FECA57', separation: '#9B59B6', queue: '#E67E22', library: '#9B59B6', 'project-view': '#FF4B5C' };
+      if (swipeMask) swipeMask.style.background = transitionColors[targetScreenId] || '#FF4B5C';
       gsap.timeline()
         .to(swipeMask, { clipPath: 'circle(150% at 50% 50%)', duration: 0.75, ease: 'power3.in', onComplete: () => {
           activeEl.classList.add('hidden-screen');
@@ -1150,9 +1446,14 @@
             if (btn.getAttribute('data-target') === targetScreenId) { btn.classList.add('bg-riso-teal'); btn.classList.remove('bg-white'); }
             else { btn.classList.add('bg-white'); btn.classList.remove('bg-riso-teal'); }
           });
+          saveState();
         }})
         .to(swipeMask, { clipPath: 'circle(0% at 50% 50%)', duration: 0.65, ease: 'power3.out' });
     }
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash.slice(1);
+      if (hash && hash !== currentActiveScreen) switchScreen(hash);
+    });
 
     // COLOR SEPARATION LAB
     const sepCanvas = document.getElementById('separation-canvas');
@@ -1161,7 +1462,8 @@
     const sepColors = { pink: '#FF4B5C', teal: '#00D2D3', yellow: '#FECA57', purple: '#9B59B6' };
     const sepOffsets = { pink: { x: 2, y: -1 }, teal: { x: -3, y: 2 }, yellow: { x: 1, y: 3 }, purple: { x: -1, y: -2 } };
     function resizeSeparationCanvas() { if (sepCanvas) { sepCanvas.width = sepCanvas.clientWidth || 600; sepCanvas.height = sepCanvas.clientHeight || 450; } }
-    window.addEventListener('resize', resizeSeparationCanvas);
+    let resizeDebounce;
+    window.addEventListener('resize', () => { clearTimeout(resizeDebounce); resizeDebounce = setTimeout(resizeSeparationCanvas, 150); });
     function renderSeparation() {
       if (!sepCanvas || !sepCtx || currentActiveScreen !== 'separation') return;
       const w = sepCanvas.width, h = sepCanvas.height;
@@ -1205,6 +1507,7 @@
       else { strip.classList.add('off'); if (check) check.style.opacity = '0.2'; }
       playStampChime();
       renderSeparation();
+      saveState();
     }
     function exportSeparation() {
       if (!sepCanvas) return;
@@ -1217,6 +1520,7 @@
     }
 
     // PRINT QUEUE
+    let queueFilter = 'ALL', queueSort = 'date-desc';
     const queueItems = [
       { id: 'QP-092', title: 'MIDNIGHT FLUORESCENCE', colors: ['#FF4B5C', '#00D2D3'], layers: 4, status: 'COMPLETE', date: '2026-05-22' },
       { id: 'QP-091', title: 'TEAL DECONSTRUCTION', colors: ['#00D2D3', '#1A1A1A'], layers: 3, status: 'COMPLETE', date: '2026-05-20' },
@@ -1225,13 +1529,37 @@
       { id: 'QP-088', title: 'PURPLE FIBER BLEED', colors: ['#9B59B6', '#F4F1EA'], layers: 2, status: 'COMPLETE', date: '2026-05-15' },
       { id: 'QP-087', title: 'CARBON BLACK STENCIL', colors: ['#1A1A1A', '#FECA57'], layers: 3, status: 'QUEUED', date: '2026-05-14' },
     ];
+    function filterQueue(filter) {
+      queueFilter = filter;
+      document.querySelectorAll('.queue-filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-filter') === filter) { btn.classList.add('bg-riso-carbon', 'text-white'); btn.classList.remove('bg-white', 'text-riso-carbon'); }
+        else { btn.classList.remove('bg-riso-carbon', 'text-white'); btn.classList.add('bg-white'); }
+      });
+      renderQueue();
+      playStampChime();
+    }
+    function sortQueue(sort) {
+      queueSort = sort;
+      renderQueue();
+      playStampChime();
+    }
+    function deleteQueueItem(id) {
+      const idx = queueItems.findIndex(q => q.id === id);
+      if (idx > -1) { queueItems.splice(idx, 1); renderQueue(); showToast('ARCHIVED ' + id, 'success'); }
+    }
     function renderQueue() {
       const feed = document.getElementById('queue-feed');
       if (!feed) return;
-      feed.innerHTML = queueItems.map((item, i) => {
+      let items = [...queueItems];
+      if (queueFilter !== 'ALL') items = items.filter(i => i.status === queueFilter);
+      if (queueSort === 'date-desc') items.sort((a, b) => b.date.localeCompare(a.date));
+      else if (queueSort === 'date-asc') items.sort((a, b) => a.date.localeCompare(b.date));
+      else if (queueSort === 'layers-desc') items.sort((a, b) => b.layers - a.layers);
+      feed.innerHTML = items.map((item, i) => {
         const statusColor = item.status === 'COMPLETE' ? 'bg-riso-teal' : item.status === 'DRYING' ? 'bg-riso-yellow' : 'bg-riso-pink';
         return `
         <div class="queue-card border-4 border-black bg-white p-6 shadow-[6px_6px_0px_rgba(0,0,0,1)] relative overflow-hidden" style="transform:rotate(${i % 2 === 0 ? -0.5 : 0.5}deg)">
+          <button onclick="event.stopPropagation();deleteQueueItem('${item.id}')" class="absolute top-2 right-2 font-mono text-[9px] text-riso-carbon/40 hover:text-riso-pink font-bold" title="Archive">[X]</button>
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer" onclick="toggleQueueDetail('${item.id}')">
             <div class="flex items-center gap-4">
               <div class="w-16 h-16 border-3 border-black flex items-center justify-center font-mono text-xs font-bold ${statusColor} text-white">
@@ -1275,22 +1603,103 @@
       el.classList.toggle('open');
       playStampChime();
     }
+    // Progress simulation
+    setInterval(() => {
+      queueItems.forEach(item => {
+        if (item.status === 'QUEUED' && Math.random() > 0.92) item.status = 'DRYING';
+        else if (item.status === 'DRYING' && Math.random() > 0.88) item.status = 'COMPLETE';
+      });
+      if (currentActiveScreen === 'queue') renderQueue();
+    }, 4000);
+
+    // RISO COLOR LIBRARY
+    const risoLibrary = [
+      { name: 'Fluorescent Pink', hex: '#FF4B5C', type: 'fluorescent' },
+      { name: 'Aqua Teal', hex: '#00D2D3', type: 'standard' },
+      { name: 'Bright Yellow', hex: '#FECA57', type: 'standard' },
+      { name: 'Purple', hex: '#9B59B6', type: 'standard' },
+      { name: 'Orange', hex: '#E67E22', type: 'standard' },
+      { name: 'Carbon Black', hex: '#1A1A1A', type: 'standard' },
+      { name: 'Riso Paper', hex: '#F4F1EA', type: 'paper' },
+    ];
+    let libraryFilter = 'all';
+    function renderLibrary() {
+      const grid = document.getElementById('library-grid');
+      if (!grid) return;
+      const items = risoLibrary.filter(i => libraryFilter === 'all' || i.type === libraryFilter);
+      grid.innerHTML = items.map(item => `
+        <div onclick="copyHex('${item.hex}')" class="cursor-pointer group border-4 border-black bg-white p-3 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform">
+          <div class="w-full h-24 border-2 border-black mb-2" style="background:${item.hex}"></div>
+          <h4 class="font-syne font-bold text-sm uppercase text-riso-carbon">${item.name}</h4>
+          <span class="font-mono text-[9px] text-riso-carbon/50">${item.hex}</span>
+        </div>
+      `).join('');
+    }
+    function filterLibrary(type) {
+      libraryFilter = type;
+      document.querySelectorAll('.lib-filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-libfilter') === type) { btn.classList.add('bg-riso-carbon', 'text-white'); btn.classList.remove('bg-white'); }
+        else { btn.classList.remove('bg-riso-carbon', 'text-white'); btn.classList.add('bg-white'); }
+      });
+      renderLibrary();
+      playStampChime();
+    }
+    function copyHex(hex) {
+      navigator.clipboard.writeText(hex).then(() => showToast('COPIED ' + hex, 'success'));
+      const preview = document.getElementById('library-preview');
+      if (preview) preview.classList.remove('hidden');
+    }
 
     // ANIMATION LOOP FOR CANVAS SCREENS
+    let isTabVisible = true;
+    document.addEventListener('visibilitychange', () => { isTabVisible = !document.hidden; });
     function globalCanvasLoop() {
-      if (currentActiveScreen === 'lab') renderLabHalftone();
-      if (currentActiveScreen === 'separation') renderSeparation();
+      if (isTabVisible) {
+        if (currentActiveScreen === 'lab') renderLabHalftone();
+        if (currentActiveScreen === 'separation') renderSeparation();
+      }
       requestAnimationFrame(globalCanvasLoop);
     }
     globalCanvasLoop();
 
+    // TOAST SYSTEM
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const colors = { info: 'bg-riso-teal', success: 'bg-riso-pink', warn: 'bg-riso-yellow' };
+      const toast = document.createElement('div');
+      toast.className = `toast border-3 border-black px-4 py-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] text-white font-mono text-xs uppercase font-bold tracking-wider ${colors[type] || colors.info}`;
+      toast.innerText = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'toastOut 0.4s cubic-bezier(0.4,0,0.2,1) forwards';
+        setTimeout(() => toast.remove(), 400);
+      }, 2800);
+    }
+
     // INIT
     window.onload = () => {
       lucide.createIcons();
+      loadState();
+      const hash = window.location.hash.slice(1);
+      if (hash && document.getElementById('screen-' + hash)) {
+        document.getElementById('screen-desk')?.classList.add('hidden-screen');
+        document.getElementById('screen-' + hash)?.classList.remove('hidden-screen');
+        currentActiveScreen = hash;
+        document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+          if (btn.getAttribute('data-target') === currentActiveScreen) { btn.classList.add('bg-riso-teal'); btn.classList.remove('bg-white'); }
+          else { btn.classList.add('bg-white'); btn.classList.remove('bg-riso-teal'); }
+        });
+      }
       initPhysicsDesk();
+      setTimeout(() => {
+        const loader = document.getElementById('physics-loading');
+        if (loader) { loader.style.opacity = '0'; loader.style.transition = 'opacity 0.5s ease'; setTimeout(() => loader.remove(), 500); }
+      }, 800);
       resizeSeparationCanvas();
       renderSeparation();
       renderQueue();
+      renderLibrary();
     };
   </script>
 </body>
