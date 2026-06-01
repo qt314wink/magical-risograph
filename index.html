@@ -11,6 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.4.5/gifshot.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -246,6 +249,8 @@
       <button onclick="switchScreen('queue')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="queue">[queue]</button>
       <button onclick="switchScreen('library')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="library">[library]</button>
       <button onclick="switchScreen('compose')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="compose">[compose]</button>
+      <button onclick="switchScreen('texture')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="texture">[texture]</button>
+      <button onclick="switchScreen('animate')" class="nav-tab-btn font-mono text-[10px] uppercase font-bold tracking-wider border-2 border-black bg-white px-2 py-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5" data-target="animate">[animate]</button>
     </nav>
   </header>
 
@@ -397,7 +402,8 @@
             </div>
           </div>
         </div>
-        <div class="mt-8 border-t-2 border-black pt-6">
+        <div class="mt-8 border-t-2 border-black pt-6 space-y-3">
+          <button onclick="saveLabProject()" class="w-full py-2 bg-riso-pink text-white font-mono text-xs uppercase font-bold tracking-widest border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:shadow-none transition-all">[SAVE TO QUEUE]</button>
           <p class="font-mono text-[11px] text-riso-carbon/70 leading-snug">* Adjustment forces real-time buffer processing in canvas redraw tick.</p>
         </div>
       </div>
@@ -485,6 +491,7 @@
             <div class="absolute bottom-4 left-4 z-10 flex items-center gap-2">
               <span class="font-mono text-[10px] bg-white border-2 border-black px-2 py-1 font-bold uppercase">[LIVE COMPOSITE OUTPUT]</span>
               <button onclick="exportSeparation()" class="font-mono text-[10px] bg-riso-carbon text-white border-2 border-black px-2 py-1 font-bold uppercase hover:bg-riso-pink transition-colors">[EXPORT PNG]</button>
+              <button onclick="saveSeparationProject()" class="font-mono text-[10px] bg-riso-pink text-white border-2 border-black px-2 py-1 font-bold uppercase hover:bg-riso-teal transition-colors">[SAVE]</button>
             </div>
           </div>
         </div>
@@ -668,6 +675,7 @@
               <div class="flex gap-2">
                 <button onclick="clearComposingStick()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-white px-3 py-1 hover:bg-riso-pink hover:text-white transition-colors">[CLEAR]</button>
                 <button onclick="pullProof()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-riso-teal text-white px-3 py-1 hover:bg-riso-pink transition-colors">[PULL PROOF]</button>
+                <button onclick="saveComposeProject()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-riso-pink text-white px-3 py-1 hover:bg-riso-yellow transition-colors">[SAVE]</button>
               </div>
             </div>
             <div id="composing-stick" class="flex flex-wrap gap-2 min-h-[80px] items-center p-4 bg-riso-paper/50 border-2 border-dashed border-black/20">
@@ -679,6 +687,7 @@
             <canvas id="compose-canvas" class="w-full h-[300px]"></canvas>
             <div class="flex justify-end gap-2 mt-4">
               <button onclick="exportProof()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-riso-pink text-white px-4 py-2 hover:bg-riso-carbon transition-colors">[EXPORT PROOF]</button>
+              <button onclick="exportComposePDF()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-riso-yellow text-riso-carbon px-4 py-2 hover:bg-riso-pink hover:text-white transition-colors">[EXPORT PDF]</button>
             </div>
           </div>
         </div>
@@ -709,7 +718,138 @@
     </div>
   </div>
 
-  <!-- SCREEN 8: PROJECT VIEW -->
+  <!-- SCREEN 8: TEXTURE SYNTHESIZER -->
+  <main id="screen-texture" class="screen-wrapper w-full hidden-screen pb-16">
+    <section class="max-w-6xl mx-auto px-6 pt-12">
+      <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-black pb-8">
+        <div>
+          <span class="font-mono text-xs uppercase text-riso-teal font-bold tracking-widest block mb-2">[PAPER MILL - TX-01]</span>
+          <h2 class="font-serif text-5xl md:text-7xl font-black uppercase tracking-tight text-riso-carbon letterpress-debossed">TEXTURE MILL</h2>
+        </div>
+        <div class="max-w-sm">
+          <p class="font-sans text-sm text-riso-carbon/70 leading-relaxed">Manufacture custom paper grain and ink bleed profiles. Apply them globally across the entire press system.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-8">
+          <div class="relative w-full h-[450px] bg-riso-paper border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <canvas id="texture-canvas" class="absolute inset-0 w-full h-full"></canvas>
+            <div class="absolute bottom-4 left-4 z-10 flex items-center gap-2">
+              <span class="font-mono text-[10px] bg-white border-2 border-black px-2 py-1 font-bold uppercase">[PREVIEW]</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-6">
+          <h3 class="font-syne font-bold text-xl uppercase text-riso-carbon border-b-2 border-black pb-2">STOCK PARAMETERS</h3>
+
+          <div>
+            <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">FREQUENCY</span><span id="val-texture-freq" class="text-riso-pink font-bold">0.8</span></div>
+            <input type="range" id="slider-texture-freq" min="0.1" max="2.0" value="0.8" step="0.1" class="w-full accent-riso-pink cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">OCTAVES</span><span id="val-texture-oct" class="text-riso-teal font-bold">4</span></div>
+            <input type="range" id="slider-texture-oct" min="1" max="8" value="4" step="1" class="w-full accent-riso-teal cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">ROUGHNESS</span><span id="val-texture-rough" class="text-riso-pink font-bold">0.5</span></div>
+            <input type="range" id="slider-texture-rough" min="0.1" max="1.0" value="0.5" step="0.1" class="w-full accent-riso-pink cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">CONTRAST</span><span id="val-texture-contrast" class="text-riso-teal font-bold">0.15</span></div>
+            <input type="range" id="slider-texture-contrast" min="0.02" max="0.6" value="0.15" step="0.02" class="w-full accent-riso-teal cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+
+          <div class="pt-4 border-t border-black/10">
+            <span class="block font-mono text-xs font-bold mb-3 uppercase tracking-wider">[Weave Pattern]</span>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="setTextureType('grain')" class="tx-type-btn font-mono text-[10px] border-2 border-black bg-riso-carbon text-white py-2 px-1 hover:bg-riso-pink hover:text-white transition-colors uppercase font-bold text-center active" data-txtype="grain">GRAIN</button>
+              <button onclick="setTextureType('laid')" class="tx-type-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-teal hover:text-white transition-colors uppercase font-bold text-center" data-txtype="laid">LAID</button>
+              <button onclick="setTextureType('rough')" class="tx-type-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-yellow hover:text-white transition-colors uppercase font-bold text-center" data-txtype="rough">ROUGH</button>
+              <button onclick="setTextureType('cotton')" class="tx-type-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-purple hover:text-white transition-colors uppercase font-bold text-center" data-txtype="cotton">COTTON</button>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-black/10 space-y-2">
+            <button onclick="applyTextureGlobal()" class="w-full py-2 bg-riso-pink text-white font-mono text-xs uppercase font-bold tracking-widest border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:shadow-none transition-all">[APPLY GLOBALLY]</button>
+            <button onclick="exportTexture()" class="w-full py-2 bg-riso-teal text-white font-mono text-xs uppercase font-bold tracking-widest border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:shadow-none transition-all">[EXPORT PNG]</button>
+            <button onclick="resetTextureGlobal()" class="w-full py-2 bg-white text-riso-carbon font-mono text-xs uppercase font-bold tracking-widest border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:shadow-none transition-all">[RESET TO DEFAULT]</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- SCREEN 9: ANIMATION STUDIO -->
+  <main id="screen-animate" class="screen-wrapper w-full hidden-screen pb-16">
+    <section class="max-w-6xl mx-auto px-6 pt-12">
+      <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-black pb-8">
+        <div>
+          <span class="font-mono text-xs uppercase text-riso-orange font-bold tracking-widest block mb-2">[FRAME ENGINE - AN-01]</span>
+          <h2 class="font-serif text-5xl md:text-7xl font-black uppercase tracking-tight text-riso-carbon letterpress-debossed">ANIMATION STUDIO</h2>
+        </div>
+        <div class="max-w-sm">
+          <p class="font-sans text-sm text-riso-carbon/70 leading-relaxed">Keyframe halftone parameters and ink layers. Playback, scrub, and export frame sequences or GIF loops.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-8">
+          <div class="relative w-full h-[450px] bg-riso-paper border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <canvas id="animate-canvas" class="absolute inset-0 w-full h-full"></canvas>
+            <div class="absolute bottom-4 left-4 z-10 flex items-center gap-2">
+              <span id="animate-status" class="font-mono text-[10px] bg-white border-2 border-black px-2 py-1 font-bold uppercase">[READY]</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center gap-3">
+            <button onclick="toggleAnimationPlayback()" id="animate-play-btn" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-riso-pink text-white px-4 py-2 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-riso-teal transition-colors">[PLAY]</button>
+            <button onclick="addKeyframe()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-white px-4 py-2 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-riso-yellow transition-colors">[ADD KEYFRAME]</button>
+            <button onclick="clearKeyframes()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-white px-4 py-2 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-riso-carbon hover:text-white transition-colors">[CLEAR]</button>
+            <button onclick="exportAnimationGIF()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-riso-teal text-white px-4 py-2 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-riso-pink transition-colors">[EXPORT GIF]</button>
+            <button onclick="exportAnimationZIP()" class="font-mono text-[10px] uppercase font-bold border-2 border-black bg-riso-yellow text-riso-carbon px-4 py-2 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-riso-pink hover:text-white transition-colors">[EXPORT ZIP]</button>
+          </div>
+          <div class="mt-4 border-2 border-black bg-white p-3">
+            <div id="timeline-track" class="flex items-center gap-1 overflow-x-auto pb-2 min-h-[48px]">
+              <span class="font-mono text-[10px] text-riso-carbon/40 uppercase">NO KEYFRAMES SET</span>
+            </div>
+            <input type="range" id="timeline-scrubber" min="0" max="100" value="0" class="w-full accent-riso-pink cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-6">
+          <h3 class="font-syne font-bold text-xl uppercase text-riso-carbon border-b-2 border-black pb-2">KEYFRAME PARAMETERS</h3>
+          <div>
+            <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">DOT SIZE</span><span id="val-anim-dot" class="text-riso-pink font-bold">6.0px</span></div>
+            <input type="range" id="slider-anim-dot" min="1.5" max="15" value="6" step="0.5" class="w-full accent-riso-pink cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">MISALIGNMENT</span><span id="val-anim-offset" class="text-riso-teal font-bold">6px</span></div>
+            <input type="range" id="slider-anim-offset" min="0" max="30" value="6" step="1" class="w-full accent-riso-teal cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">ROTATION</span><span id="val-anim-rot" class="text-riso-pink font-bold">0°</span></div>
+            <input type="range" id="slider-anim-rot" min="0" max="360" value="0" step="1" class="w-full accent-riso-pink cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+          <div class="pt-4 border-t border-black/10">
+            <span class="block font-mono text-xs font-bold mb-3 uppercase tracking-wider">[Ink Pair]</span>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="setAnimInks('#FF4B5C','#00D2D3','Pink / Teal')" class="anim-ink-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-pink hover:text-white transition-colors uppercase font-bold text-center active">Pink / Teal</button>
+              <button onclick="setAnimInks('#FF4B5C','#FECA57','Pink / Yellow')" class="anim-ink-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-pink hover:text-white transition-colors uppercase font-bold text-center">Pink / Yellow</button>
+              <button onclick="setAnimInks('#00D2D3','#FECA57','Teal / Yellow')" class="anim-ink-btn font-mono text-[10px] border-2 border-black bg-white py-2 px-1 hover:bg-riso-teal hover:text-white transition-colors uppercase font-bold text-center">Teal / Yellow</button>
+            </div>
+          </div>
+          <div class="pt-4 border-t border-black/10">
+            <span class="block font-mono text-xs font-bold mb-3 uppercase tracking-wider">[Duration]</span>
+            <div class="flex justify-between font-mono text-xs mb-2"><span class="font-bold">FRAMES</span><span id="val-anim-frames" class="text-riso-teal font-bold">60</span></div>
+            <input type="range" id="slider-anim-frames" min="15" max="120" value="60" step="15" class="w-full accent-riso-teal cursor-pointer bg-riso-carbon h-2 border border-black rounded-lg">
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- SCREEN 10: PROJECT VIEW -->
   <main id="screen-project-view" class="screen-wrapper w-full hidden-screen min-h-[calc(100vh-80px)] bg-riso-paper pb-16">
     <section class="max-w-4xl mx-auto px-6 pt-12">
       <button onclick="switchScreen('desk')" class="font-mono text-xs uppercase font-bold tracking-wider border-2 border-black bg-white px-4 py-2 shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:bg-riso-pink hover:text-white transition-colors active:translate-y-0.5 mb-10">← BACK TO DESK WORKSPACE</button>
@@ -830,6 +970,7 @@
             </div>
             <div class="flex flex-col gap-2 mt-4">
               <button id="zine-project-btn" onclick="goToCurrentProject()" class="interactive-btn w-full py-2 bg-riso-teal text-riso-carbon font-mono text-xs uppercase font-bold tracking-widest border-2 border-black shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:bg-riso-pink hover:text-white transition-colors">[GO-TO PROJECT ↗]</button>
+              <button onclick="exportZineToPDF()" class="w-full py-2 bg-riso-yellow text-riso-carbon font-mono text-xs uppercase font-bold tracking-widest border-2 border-black shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:bg-riso-pink hover:text-white transition-colors">[EXPORT ZINE PDF]</button>
               <button onclick="closeZine()" class="w-full py-2 bg-riso-carbon text-white font-mono text-xs uppercase tracking-widest border-2 border-black hover:bg-riso-pink transition-colors">[CLOSE STENCIL]</button>
             </div>
           </div>
@@ -838,6 +979,18 @@
     </div>
   </div>
 
+  <script type="module">
+    import { initStorage } from './src/utils/storage.js';
+    initStorage();
+    import { TextureSynth } from './src/texture.js';
+    window.TextureSynth = TextureSynth;
+    import { haptic, initMobileEnhancements } from './src/mobile.js';
+    window.haptic = haptic;
+    window.initMobileEnhancements = initMobileEnhancements;
+    import { exportProofPDF, exportZinePDF } from './src/utils/pdfExport.js';
+    window.exportProofPDF = exportProofPDF;
+    window.exportZinePDF = exportZinePDF;
+  </script>
   <script>
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'mag-riso-system';
     let currentActiveScreen = 'desk';
@@ -879,6 +1032,7 @@
       bandpassFilter.frequency.setTargetAtTime(sweepFrequency, audioCtx.currentTime, 0.05);
     }
     function playStampChime() {
+      if (typeof window.haptic === 'function') window.haptic(12);
       if (!audioCtx || !globalAudioEnabled) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator();
@@ -894,6 +1048,7 @@
       osc.stop(audioCtx.currentTime + 0.35);
     }
     function playCollisionTone(impulse) {
+      if (typeof window.haptic === 'function') window.haptic(Math.min(impulse * 2, 25));
       if (!audioCtx || !globalAudioEnabled) return;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -977,7 +1132,7 @@
       const dy = e.changedTouches[0].screenY - touchStartY;
       const dt = Date.now() - touchStartTime;
       if (dt > 400 || Math.abs(dx) < 60 || Math.abs(dy) > 100) return;
-      const screens = ['desk', 'lab', 'archive', 'separation', 'queue', 'library', 'compose'];
+      const screens = ['desk', 'lab', 'archive', 'separation', 'queue', 'library', 'compose', 'texture', 'animate'];
       const idx = screens.indexOf(currentActiveScreen);
       if (dx < 0 && idx < screens.length - 1) switchScreen(screens[idx + 1]);
       if (dx > 0 && idx > 0) switchScreen(screens[idx - 1]);
@@ -1301,13 +1456,20 @@
       mouseConstraint.mouse.element.removeEventListener("DOMMouseScroll", mouseConstraint.mouse.mousewheel);
 
       let dragStartPos = { x: 0, y: 0 }, dragStartTime = 0;
+      let lastDragPos = { x: 0, y: 0 }, lastDragTime = 0;
       Events.on(mouseConstraint, 'mousedown', (event) => { 
         dragStartPos = { ...event.mouse.position }; 
         dragStartTime = Date.now(); 
+        lastDragPos = { ...event.mouse.position };
+        lastDragTime = Date.now();
         initAudio();
         if (event.source.body && event.source.body.domElement) {
           event.source.body.domElement.style.zIndex = '50';
         }
+      });
+      Events.on(mouseConstraint, 'mousemove', (event) => {
+        lastDragPos = { ...event.mouse.position };
+        lastDragTime = Date.now();
       });
       Events.on(mouseConstraint, 'dragend', (event) => {
         const endPos = event.mouse.position;
@@ -1321,6 +1483,17 @@
           if (dom) {
             const btn = dom.querySelector('.interactive-btn');
             if (btn) btn.click();
+          }
+        }
+        // Touch throw velocity
+        const throwDt = Date.now() - lastDragTime;
+        if (event.source.body && throwDt > 0 && throwDt < 150) {
+          const vx = (endPos.x - lastDragPos.x) / throwDt * 18;
+          const vy = (endPos.y - lastDragPos.y) / throwDt * 18;
+          const speed = Math.sqrt(vx * vx + vy * vy);
+          if (speed > 2) {
+            Matter.Body.setVelocity(event.source.body, { x: vx, y: vy });
+            if (typeof window.haptic === 'function') window.haptic(20);
           }
         }
       });
@@ -1354,6 +1527,7 @@
       Matter.Runner.run(runner, engine);
     }
     function shakeDesk() {
+      if (typeof window.haptic === 'function') window.haptic([30, 20, 30]);
       cardsMapping.forEach((body) => { Matter.Body.applyForce(body, body.position, { x: (Math.random() - 0.5) * 0.1, y: -Math.random() * 0.15 }); });
       playStampChime();
     }
@@ -1656,6 +1830,7 @@
     // PAGE ROUTER
     function switchScreen(targetScreenId) {
       if (targetScreenId === currentActiveScreen) return;
+      if (typeof window.haptic === 'function') window.haptic(6);
       const activeEl = document.getElementById('screen-' + currentActiveScreen);
       const targetEl = document.getElementById('screen-' + targetScreenId);
       const swipeMask = document.getElementById('page-swipe-ink');
@@ -1663,7 +1838,7 @@
       playStampChime();
       playTransitionTone();
       window.location.hash = targetScreenId;
-      const transitionColors = { desk: '#FF4B5C', lab: '#00D2D3', archive: '#FECA57', separation: '#9B59B6', queue: '#E67E22', library: '#9B59B6', compose: '#00D2D3', 'project-view': '#FF4B5C' };
+      const transitionColors = { desk: '#FF4B5C', lab: '#00D2D3', archive: '#FECA57', separation: '#9B59B6', queue: '#E67E22', library: '#9B59B6', compose: '#00D2D3', texture: '#FECA57', animate: '#E67E22', 'project-view': '#FF4B5C' };
       if (swipeMask) swipeMask.style.background = transitionColors[targetScreenId] || '#FF4B5C';
       gsap.timeline()
         .to(swipeMask, { clipPath: 'circle(150% at 50% 50%)', duration: 0.75, ease: 'power3.in', onComplete: () => {
@@ -1672,6 +1847,8 @@
           currentActiveScreen = targetScreenId;
           if (targetScreenId === 'lab') { labCanvas.width = labCanvas.clientWidth || 500; labCanvas.height = labCanvas.clientHeight || 360; renderLabHalftone(); }
           if (targetScreenId === 'separation') { resizeSeparationCanvas(); renderSeparation(); }
+          if (targetScreenId === 'texture') { initTextureSynth(); updateTextureSynth(); }
+          if (targetScreenId === 'animate') { initAnimationStudio(); }
           document.querySelectorAll('.nav-tab-btn').forEach(btn => {
             if (btn.getAttribute('data-target') === targetScreenId) { btn.classList.add('bg-riso-teal'); btn.classList.remove('bg-white'); }
             else { btn.classList.add('bg-white'); btn.classList.remove('bg-riso-teal'); }
@@ -1730,6 +1907,7 @@
       sepCtx.restore();
     }
     function toggleChannel(ch) {
+      if (typeof window.haptic === 'function') window.haptic(8);
       sepChannels[ch] = !sepChannels[ch];
       const strip = document.getElementById('channel-' + ch);
       const check = document.getElementById('check-' + ch);
@@ -1775,12 +1953,16 @@
     }
     function deleteQueueItem(id) {
       const idx = queueItems.findIndex(q => q.id === id);
-      if (idx > -1) { queueItems.splice(idx, 1); renderQueue(); showToast('ARCHIVED ' + id, 'success'); }
+      if (idx > -1) { queueItems.splice(idx, 1); }
+      if (window.projectArchive) { window.projectArchive.delete(id); }
+      renderQueue();
+      showToast('ARCHIVED ' + id, 'success');
     }
     function renderQueue() {
       const feed = document.getElementById('queue-feed');
       if (!feed) return;
-      let items = [...queueItems];
+      const saved = window.projectArchive ? window.projectArchive.getAll() : [];
+      let items = [...saved, ...queueItems];
       if (queueFilter !== 'ALL') items = items.filter(i => i.status === queueFilter);
       if (queueSort === 'date-desc') items.sort((a, b) => b.date.localeCompare(a.date));
       else if (queueSort === 'date-asc') items.sort((a, b) => a.date.localeCompare(b.date));
@@ -2024,6 +2206,7 @@
       ctx.restore();
     }
     function pullProof() {
+      if (typeof window.haptic === 'function') window.haptic([15, 10, 15, 10, 20]);
       if (composeStick.length === 0) { showToast('SET TYPE FIRST', 'warn'); return; }
       const canvas = document.getElementById('compose-canvas');
       const result = document.getElementById('proof-result');
@@ -2109,6 +2292,310 @@
       showToast('PROOF EXPORTED', 'success');
       playStampChime();
     }
+    function exportComposePDF() {
+      const canvas = document.getElementById('compose-canvas');
+      if (!canvas) return;
+      const ok = window.exportProofPDF(canvas, { title: composeStick.filter(c => c !== '\n' && c !== '\u2003' && c !== '\u2002' && c !== '\u2009').join('').slice(0, 20) || 'COMPOSITION', printMode });
+      if (ok) { showToast('PDF EXPORTED', 'success'); playStampChime(); }
+      else { showToast('PDF EXPORT FAILED', 'warn'); }
+    }
+    function exportZineToPDF() {
+      if (!currentlyOpenZineKey) return;
+      const data = projectData[currentlyOpenZineKey];
+      if (!data) return;
+      const ok = window.exportZinePDF(data);
+      if (ok) { showToast('ZINE PDF EXPORTED', 'success'); playStampChime(); }
+      else { showToast('PDF EXPORT FAILED', 'warn'); }
+    }
+
+    // TEXTURE SYNTHESIZER
+    let textureSynth = null;
+    function initTextureSynth() {
+      const canvas = document.getElementById('texture-canvas');
+      if (!canvas || textureSynth) return;
+      textureSynth = new window.TextureSynth(canvas);
+      const container = canvas.parentElement;
+      textureSynth.resize(container.clientWidth || 600, container.clientHeight || 450);
+      textureSynth.generate();
+    }
+    function updateTextureSynth() {
+      if (!textureSynth) return;
+      textureSynth.params.frequency = parseFloat(document.getElementById('slider-texture-freq')?.value || 0.8);
+      textureSynth.params.octaves = parseInt(document.getElementById('slider-texture-oct')?.value || 4);
+      textureSynth.params.roughness = parseFloat(document.getElementById('slider-texture-rough')?.value || 0.5);
+      textureSynth.params.contrast = parseFloat(document.getElementById('slider-texture-contrast')?.value || 0.15);
+      document.getElementById('val-texture-freq').innerText = textureSynth.params.frequency.toFixed(1);
+      document.getElementById('val-texture-oct').innerText = textureSynth.params.octaves;
+      document.getElementById('val-texture-rough').innerText = textureSynth.params.roughness.toFixed(1);
+      document.getElementById('val-texture-contrast').innerText = textureSynth.params.contrast.toFixed(2);
+      textureSynth.generate();
+    }
+    function setTextureType(type) {
+      if (!textureSynth) return;
+      textureSynth.params.type = type;
+      document.querySelectorAll('.tx-type-btn').forEach(btn => {
+        if (btn.getAttribute('data-txtype') === type) { btn.classList.add('bg-riso-carbon', 'text-white'); btn.classList.remove('bg-white'); }
+        else { btn.classList.remove('bg-riso-carbon', 'text-white'); btn.classList.add('bg-white'); }
+      });
+      updateTextureSynth();
+      playStampChime();
+    }
+    function applyTextureGlobal() {
+      if (!textureSynth) return;
+      textureSynth.applyGlobal();
+      showToast('TEXTURE APPLIED GLOBALLY', 'success');
+      playStampChime();
+    }
+    function exportTexture() {
+      if (!textureSynth) return;
+      const link = document.createElement('a');
+      link.download = 'mag-riso-texture-' + new Date().toISOString().slice(0,10) + '.png';
+      link.href = textureSynth.getDataURL();
+      link.click();
+      showToast('TEXTURE EXPORTED', 'success');
+      playStampChime();
+    }
+    function resetTextureGlobal() {
+      if (textureSynth) textureSynth.resetGlobal();
+      showToast('TEXTURE RESET', 'info');
+      playStampChime();
+    }
+    ['slider-texture-freq', 'slider-texture-oct', 'slider-texture-rough', 'slider-texture-contrast'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', updateTextureSynth);
+    });
+
+    // ANIMATION STUDIO
+    let animKeyframes = [];
+    let animIsPlaying = false;
+    let animFrameId = null;
+    let animCurrentFrame = 0;
+    let animTotalFrames = 60;
+    let animConfig = { dotSize: 6, offset: 6, rotation: 0, inkColor1: '#FF4B5C', inkColor2: '#00D2D3' };
+    function initAnimationStudio() {
+      const canvas = document.getElementById('animate-canvas');
+      if (!canvas) return;
+      canvas.width = canvas.clientWidth || 600;
+      canvas.height = canvas.clientHeight || 450;
+      renderAnimationFrame();
+    }
+    function getAnimatedParams(frame) {
+      const t = frame / Math.max(1, animTotalFrames);
+      // If no keyframes, use slider values directly
+      if (animKeyframes.length === 0) {
+        return {
+          dotSize: animConfig.dotSize,
+          offset: animConfig.offset,
+          rotation: animConfig.rotation,
+          inkColor1: animConfig.inkColor1,
+          inkColor2: animConfig.inkColor2,
+        };
+      }
+      // Find surrounding keyframes
+      let prev = animKeyframes[animKeyframes.length - 1];
+      let next = animKeyframes[0];
+      for (let i = 0; i < animKeyframes.length - 1; i++) {
+        if (frame >= animKeyframes[i].frame && frame <= animKeyframes[i + 1].frame) {
+          prev = animKeyframes[i];
+          next = animKeyframes[i + 1];
+          break;
+        }
+      }
+      const segmentDuration = next.frame - prev.frame;
+      const localT = segmentDuration > 0 ? (frame - prev.frame) / segmentDuration : 0;
+      const eased = localT * localT * (3 - 2 * localT); // smoothstep
+      return {
+        dotSize: prev.dotSize + (next.dotSize - prev.dotSize) * eased,
+        offset: prev.offset + (next.offset - prev.offset) * eased,
+        rotation: prev.rotation + (next.rotation - prev.rotation) * eased,
+        inkColor1: prev.inkColor1,
+        inkColor2: prev.inkColor2,
+      };
+    }
+    function renderAnimationFrame() {
+      const canvas = document.getElementById('animate-canvas');
+      const ctx = canvas?.getContext('2d');
+      if (!canvas || !ctx) return;
+      const w = canvas.width, h = canvas.height;
+      const params = getAnimatedParams(animCurrentFrame);
+      const t = animCurrentFrame / Math.max(1, animTotalFrames);
+      const density = 16;
+      const radiusMax = params.dotSize;
+      const misalignment = params.offset;
+      const rot = params.rotation * (Math.PI / 180);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#F4F1EA'; ctx.fillRect(0, 0, w, h);
+      // Paper grain
+      ctx.save(); ctx.globalAlpha = 0.04; ctx.fillStyle = '#1A1A1A';
+      for (let i = 0; i < 2000; i++) ctx.fillRect(Math.random() * w, Math.random() * h, 1, 1);
+      ctx.restore();
+      ctx.save();
+      ctx.translate(w/2, h/2);
+      ctx.rotate(rot * t);
+      ctx.translate(-w/2, -h/2);
+      ctx.fillStyle = params.inkColor2; ctx.globalCompositeOperation = 'multiply';
+      for (let x = 0; x < w; x += density) {
+        for (let y = 0; y < h; y += density) {
+          const distToCenter = Math.sqrt(Math.pow(x - w/2, 2) + Math.pow(y - h/2, 2));
+          const luminance = (Math.sin(distToCenter * 0.015 - t * Math.PI * 2) + 1.0) / 2.0;
+          const radius = Math.max(0.2, luminance * radiusMax);
+          ctx.beginPath(); ctx.ellipse(x - misalignment, y - misalignment * 0.5, radius * 1.1, radius * 0.9, 0, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.restore();
+      ctx.save();
+      ctx.translate(w/2, h/2);
+      ctx.rotate(-rot * t * 0.5);
+      ctx.translate(-w/2, -h/2);
+      ctx.fillStyle = params.inkColor1; ctx.globalCompositeOperation = 'multiply';
+      for (let x = 0; x < w; x += density) {
+        for (let y = 0; y < h; y += density) {
+          const distToCenter = Math.sqrt(Math.pow(x - w/2, 2) + Math.pow(y - h/2, 2));
+          const luminance = (Math.sin(distToCenter * 0.015 - t * Math.PI * 2 + Math.PI) + 1.0) / 2.0;
+          const radius = Math.max(0.2, luminance * radiusMax);
+          ctx.beginPath(); ctx.ellipse(x + misalignment, y + misalignment * 0.5, radius * 1.1, radius * 0.9, 0, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+    function toggleAnimationPlayback() {
+      animIsPlaying = !animIsPlaying;
+      const btn = document.getElementById('animate-play-btn');
+      const status = document.getElementById('animate-status');
+      if (animIsPlaying) {
+        if (btn) { btn.innerText = '[PAUSE]'; btn.classList.add('bg-riso-teal'); btn.classList.remove('bg-riso-pink'); }
+        if (status) status.innerText = '[PLAYING]';
+        animFrameId = requestAnimationFrame(tickAnimation);
+      } else {
+        if (btn) { btn.innerText = '[PLAY]'; btn.classList.remove('bg-riso-teal'); btn.classList.add('bg-riso-pink'); }
+        if (status) status.innerText = '[PAUSED]';
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+      }
+    }
+    function tickAnimation() {
+      if (!animIsPlaying) return;
+      animCurrentFrame = (animCurrentFrame + 1) % animTotalFrames;
+      const scrubber = document.getElementById('timeline-scrubber');
+      if (scrubber) scrubber.value = (animCurrentFrame / animTotalFrames) * 100;
+      renderAnimationFrame();
+      animFrameId = requestAnimationFrame(tickAnimation);
+    }
+    function addKeyframe() {
+      const frame = animCurrentFrame;
+      const existing = animKeyframes.findIndex(k => k.frame === frame);
+      const keyframe = {
+        frame,
+        dotSize: parseFloat(document.getElementById('slider-anim-dot')?.value || 6),
+        offset: parseInt(document.getElementById('slider-anim-offset')?.value || 6),
+        rotation: parseInt(document.getElementById('slider-anim-rot')?.value || 0),
+        inkColor1: animConfig.inkColor1,
+        inkColor2: animConfig.inkColor2,
+      };
+      if (existing > -1) animKeyframes[existing] = keyframe;
+      else animKeyframes.push(keyframe);
+      animKeyframes.sort((a, b) => a.frame - b.frame);
+      renderTimeline();
+      showToast('KEYFRAME AT FRAME ' + frame, 'success');
+      playStampChime();
+    }
+    function clearKeyframes() {
+      animKeyframes = [];
+      renderTimeline();
+      showToast('KEYFRAMES CLEARED', 'info');
+    }
+    function renderTimeline() {
+      const track = document.getElementById('timeline-track');
+      if (!track) return;
+      if (animKeyframes.length === 0) {
+        track.innerHTML = '<span class="font-mono text-[10px] text-riso-carbon/40 uppercase">NO KEYFRAMES SET</span>';
+        return;
+      }
+      track.innerHTML = animKeyframes.map((k, i) =>
+        `<div class="flex-shrink-0 w-8 h-8 border-2 border-black bg-riso-pink text-white flex items-center justify-center font-mono text-[9px] font-bold cursor-pointer hover:bg-riso-teal" onclick="scrubToFrame(${k.frame})">${k.frame}</div>`
+      ).join('');
+    }
+    function scrubToFrame(frame) {
+      animCurrentFrame = frame;
+      const scrubber = document.getElementById('timeline-scrubber');
+      if (scrubber) scrubber.value = (frame / animTotalFrames) * 100;
+      renderAnimationFrame();
+    }
+    function updateAnimSliders() {
+      animConfig.dotSize = parseFloat(document.getElementById('slider-anim-dot')?.value || 6);
+      animConfig.offset = parseInt(document.getElementById('slider-anim-offset')?.value || 6);
+      animConfig.rotation = parseInt(document.getElementById('slider-anim-rot')?.value || 0);
+      animTotalFrames = parseInt(document.getElementById('slider-anim-frames')?.value || 60);
+      document.getElementById('val-anim-dot').innerText = animConfig.dotSize.toFixed(1) + 'px';
+      document.getElementById('val-anim-offset').innerText = animConfig.offset + 'px';
+      document.getElementById('val-anim-rot').innerText = animConfig.rotation + '°';
+      document.getElementById('val-anim-frames').innerText = animTotalFrames;
+      renderAnimationFrame();
+    }
+    function setAnimInks(c1, c2, label) {
+      animConfig.inkColor1 = c1; animConfig.inkColor2 = c2;
+      document.querySelectorAll('.anim-ink-btn').forEach(btn => {
+        if (btn.innerText === label) { btn.classList.add('bg-riso-carbon', 'text-white'); }
+        else { btn.classList.remove('bg-riso-carbon', 'text-white'); }
+      });
+      renderAnimationFrame();
+      playStampChime();
+    }
+    async function exportAnimationGIF() {
+      if (typeof gifshot === 'undefined') { showToast('GIF LIBRARY NOT LOADED', 'warn'); return; }
+      const canvas = document.getElementById('animate-canvas');
+      if (!canvas) return;
+      showToast('RENDERING GIF...', 'info');
+      const images = [];
+      const originalFrame = animCurrentFrame;
+      for (let f = 0; f < animTotalFrames; f++) {
+        animCurrentFrame = f;
+        renderAnimationFrame();
+        images.push(canvas.toDataURL('image/png'));
+      }
+      animCurrentFrame = originalFrame;
+      renderAnimationFrame();
+      gifshot.createGIF({ images, gifWidth: canvas.width, gifHeight: canvas.height, interval: 0.08 }, (obj) => {
+        if (obj.error) { showToast('GIF EXPORT FAILED', 'warn'); return; }
+        const link = document.createElement('a');
+        link.download = 'mag-riso-anim-' + new Date().toISOString().slice(0,10) + '.gif';
+        link.href = obj.image;
+        link.click();
+        showToast('GIF EXPORTED', 'success');
+        playStampChime();
+      });
+    }
+    async function exportAnimationZIP() {
+      if (typeof JSZip === 'undefined') { showToast('JSZIP NOT LOADED', 'warn'); return; }
+      const canvas = document.getElementById('animate-canvas');
+      if (!canvas) return;
+      showToast('RENDERING FRAMES...', 'info');
+      const zip = new JSZip();
+      const folder = zip.folder('mag-riso-frames');
+      const originalFrame = animCurrentFrame;
+      for (let f = 0; f < animTotalFrames; f++) {
+        animCurrentFrame = f;
+        renderAnimationFrame();
+        const data = canvas.toDataURL('image/png').split(',')[1];
+        folder.file(`frame-${String(f).padStart(3, '0')}.png`, data, { base64: true });
+      }
+      animCurrentFrame = originalFrame;
+      renderAnimationFrame();
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.download = 'mag-riso-anim-' + new Date().toISOString().slice(0,10) + '.zip';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      showToast('ZIP EXPORTED', 'success');
+      playStampChime();
+    }
+    ['slider-anim-dot', 'slider-anim-offset', 'slider-anim-rot', 'slider-anim-frames'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', updateAnimSliders);
+    });
+    document.getElementById('timeline-scrubber')?.addEventListener('input', (e) => {
+      animCurrentFrame = Math.floor((parseInt(e.target.value) / 100) * animTotalFrames);
+      renderAnimationFrame();
+    });
 
     // ANIMATION LOOP FOR CANVAS SCREENS
     let isTabVisible = true;
@@ -2117,10 +2604,65 @@
       if (isTabVisible) {
         if (currentActiveScreen === 'lab') renderLabHalftone();
         if (currentActiveScreen === 'separation') renderSeparation();
+        if (currentActiveScreen === 'animate' && animIsPlaying) renderAnimationFrame();
       }
       requestAnimationFrame(globalCanvasLoop);
     }
     globalCanvasLoop();
+
+    // SAVE PROJECTS
+    function saveLabProject() {
+      if (!window.projectArchive) return;
+      const id = window.projectArchive.save({
+        title: 'HALFTONE LAB CONFIG',
+        type: 'lab',
+        colors: [labConfig.inkColor1, labConfig.inkColor2],
+        layers: 2,
+        config: { ...labConfig, paper: document.body.classList.contains('paper-cotton') ? 'cotton' : document.body.classList.contains('paper-laid') ? 'laid' : document.body.classList.contains('paper-rough') ? 'rough' : 'default' }
+      });
+      renderQueue();
+      showToast('SAVED LAB CONFIG: ' + id, 'success');
+      playStampChime();
+    }
+    function saveSeparationProject() {
+      if (!window.projectArchive) return;
+      const activeChannels = Object.keys(sepChannels).filter(k => sepChannels[k]);
+      const id = window.projectArchive.save({
+        title: 'DRUM ISOLATION ' + activeChannels.join('+').toUpperCase(),
+        type: 'separation',
+        colors: activeChannels.map(c => sepColors[c]),
+        layers: activeChannels.length,
+        config: { sepChannels: { ...sepChannels } }
+      });
+      renderQueue();
+      showToast('SAVED SEPARATION: ' + id, 'success');
+      playStampChime();
+    }
+    function saveComposeProject() {
+      if (!window.projectArchive) return;
+      if (composeStick.length === 0) { showToast('NOTHING TO SAVE', 'warn'); return; }
+      const id = window.projectArchive.save({
+        title: composeStick.filter(c => c !== '\n' && c !== '\u2003' && c !== '\u2002' && c !== '\u2009').join('').slice(0, 12) || 'TYPE COMPOSITION',
+        type: 'compose',
+        colors: ['#1A1A1A'],
+        layers: 1,
+        config: { composeStick: [...composeStick], printMode }
+      });
+      renderQueue();
+      showToast('SAVED COMPOSITION: ' + id, 'success');
+      playStampChime();
+    }
+    // AUTO-SAVE DRAFTS
+    setInterval(() => {
+      if (!window.projectArchive) return;
+      if (currentActiveScreen === 'lab') {
+        window.projectArchive.saveDraft({ screen: 'lab', labConfig, paper: document.body.classList.contains('paper-cotton') ? 'cotton' : document.body.classList.contains('paper-laid') ? 'laid' : document.body.classList.contains('paper-rough') ? 'rough' : 'default' });
+      } else if (currentActiveScreen === 'separation') {
+        window.projectArchive.saveDraft({ screen: 'separation', sepChannels: { ...sepChannels } });
+      } else if (currentActiveScreen === 'compose') {
+        window.projectArchive.saveDraft({ screen: 'compose', composeStick: [...composeStick], printMode });
+      }
+    }, 30000);
 
     // RANDOM PROJECT GENERATOR
     function generateRandomProject() {
@@ -2212,6 +2754,34 @@
       renderQueue();
       renderLibrary();
       renderTypeCase();
+      initTextureSynth();
+      initAnimationStudio();
+      // Restore drafts
+      const draft = window.projectArchive ? window.projectArchive.getDraft() : null;
+      if (draft) {
+        if (draft.screen === 'lab' && draft.labConfig) {
+          Object.assign(labConfig, draft.labConfig);
+          if (sliderLabDot) sliderLabDot.value = labConfig.dotSize;
+          if (sliderLabFreq) sliderLabFreq.value = labConfig.frequency;
+          if (sliderLabOffset) sliderLabOffset.value = labConfig.offset;
+          if (sliderLabPressure) sliderLabPressure.value = labConfig.pressure || 3;
+          if (draft.paper) changePaper(draft.paper);
+          syncLabControllers();
+        } else if (draft.screen === 'separation' && draft.sepChannels) {
+          Object.keys(draft.sepChannels).forEach(ch => {
+            sepChannels[ch] = draft.sepChannels[ch];
+            const strip = document.getElementById('channel-' + ch);
+            const check = document.getElementById('check-' + ch);
+            if (strip) { draft.sepChannels[ch] ? strip.classList.remove('off') : strip.classList.add('off'); }
+            if (check) check.style.opacity = draft.sepChannels[ch] ? '1' : '0.2';
+          });
+          renderSeparation();
+        } else if (draft.screen === 'compose' && draft.composeStick) {
+          composeStick = draft.composeStick;
+          if (draft.printMode) setPrintMode(draft.printMode);
+          renderComposingStick();
+        }
+      }
     };
   </script>
 </body>
