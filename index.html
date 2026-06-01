@@ -1393,7 +1393,7 @@
       if (!engine) return;
       engine.gravity.y = engine.gravity.y > 0 ? -0.35 : 0.35;
       const btn = document.getElementById('gravity-hud-btn');
-      if (btn) btn.classList.toggle('bg-riso-purple'); btn.classList.toggle('bg-riso-teal');
+      if (btn) { btn.classList.toggle('bg-riso-purple'); btn.classList.toggle('bg-riso-teal'); }
       playStampChime();
       showToast(engine.gravity.y > 0 ? 'GRAVITY NORMAL' : 'GRAVITY INVERTED', 'info');
     }
@@ -1887,7 +1887,7 @@
     const typeCaseData = {
       letters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
       numbers: '0123456789'.split(''),
-      punct: '!?&.-:;""''()'.split(''),
+      punct: "!?&.–:;\"\"'()".split(''),
       ornaments: ['★','❖','✦','❧','☙','❀','✿','—','‖','¶','§','†'].map(s => s),
       spacing: [{l:'EM',v:'\u2003'}, {l:'EN',v:'\u2002'}, {l:'3-PT',v:'\u2009'}, {l:'LEAD',v:'\n'}]
     };
@@ -2188,7 +2188,7 @@
     // INIT
     window.onload = () => {
       if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
-      lucide.createIcons();
+      try { lucide.createIcons(); } catch(e) { console.warn('lucide icons failed to init', e); }
       loadState();
       const darkBtn = document.getElementById('dark-mode-btn');
       if (darkBtn && darkModeEnabled) darkBtn.innerText = '[☼]';
